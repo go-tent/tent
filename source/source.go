@@ -38,6 +38,10 @@ func (f FileSource) walk(ctx context.Context, root string, filters []PathFilter)
 		case <-done:
 			return nil
 		default:
+			info, _ := os.Stat(path)
+			if info.IsDir() {
+				return nil
+			}
 			for _, f := range filters {
 				if !f(path) {
 					return nil
