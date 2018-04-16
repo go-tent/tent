@@ -1,3 +1,4 @@
+// Package source provides an iterable Source interface of elements with path and content.
 package source
 
 import (
