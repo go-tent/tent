@@ -87,6 +87,33 @@ text`},
 	}
 }
 
+func TestParsePicture(t *testing.T) {
+	src := testSource{
+		items: []testItem{
+			{"a.jpg", `somebytes`},
+		},
+	}
+	r, err := Parse(&src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer printCategory(t, 0, r)
+
+	if l := len(r.Components); l != 1 {
+		t.Fatalf("Expected %d components, got %d", 1, l)
+	}
+	p, ok := r.Components[0].(*Picture)
+	if !ok {
+		t.Fatalf("Expected component to be a %T, got %T", new(Picture), r.Components[0])
+	}
+	if id := p.ID; id != "a.jpg" {
+		t.Fatalf("Expected %q segments, got %q", "a.jpg", id)
+	}
+	if e := "somebytes"; string(p.Data) != e {
+		t.Fatalf("Expected %v data, got %v", e, string(p.Data))
+	}
+}
+
 func printCategory(t *testing.T, deep int, c *Category) {
 	t.Logf("%s> %+v", strings.Repeat("  ", deep), c)
 	for _, cat := range c.Sub {

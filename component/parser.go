@@ -15,7 +15,7 @@ type Parser interface {
 	Parse(root *Category, item source.Item) error
 }
 
-var baseParsers = []Parser{categoryParser{}, segmentParser{}}
+var baseParsers = []Parser{catParser{}, segParser{}, picParser{}}
 
 // Parse trasforms a Source in a Category tree.
 func Parse(src source.Source, parsers ...Parser) (*Category, error) {

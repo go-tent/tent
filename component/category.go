@@ -60,17 +60,17 @@ type Component interface {
 	Order() float64
 }
 
-// categoryParser is the Parser for Category
-type categoryParser struct{}
+// catParser is the Parser for Category
+type catParser struct{}
 
 // Match tells if it's a Category from the name.
-func (categoryParser) Match(name string) bool {
+func (catParser) Match(name string) bool {
 	_, file := path.Split(name)
 	return file == catName
 }
 
 // Parse populates the Category with Item contents.
-func (categoryParser) Parse(root *Category, item source.Item) error {
+func (catParser) Parse(root *Category, item source.Item) error {
 	contents, err := item.Content()
 	if err != nil {
 		return err

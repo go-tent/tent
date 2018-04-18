@@ -28,17 +28,17 @@ func (s Segment) String() string {
 	return fmt.Sprintf("Segment:%s Idx:%v Meta:%v", s.ID, s.Index, s.Meta)
 }
 
-// segmentParser converts
-type segmentParser struct{}
+// segParser converts
+type segParser struct{}
 
 // Match tells if it's a Segment from the name.
-func (segmentParser) Match(name string) bool {
+func (segParser) Match(name string) bool {
 	_, file := path.Split(name)
 	return strings.ToLower(path.Ext(file)) == extSegment
 }
 
 // Parse populates the Segment with Item contents.
-func (segmentParser) Parse(root *Category, item source.Item) error {
+func (segParser) Parse(root *Category, item source.Item) error {
 	dir, file := path.Split(item.Name())
 	contents, err := item.Content()
 	if err != nil {
