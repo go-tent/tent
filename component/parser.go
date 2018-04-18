@@ -11,7 +11,7 @@ const (
 
 // Parser is a Component parser
 type Parser interface {
-	Match(item source.Item) bool
+	Match(name string) bool
 	Parse(root *Category, item source.Item) error
 }
 
@@ -24,8 +24,9 @@ func Parse(src source.Source, parsers ...Parser) (*Category, error) {
 		if err != nil {
 			return nil, err
 		}
+		name := i.Name()
 		for _, p := range append(baseParsers, parsers...) {
-			if !p.Match(i) {
+			if !p.Match(name) {
 				continue
 			}
 			if err := p.Parse(&root, i); err != nil {

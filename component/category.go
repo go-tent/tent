@@ -64,8 +64,8 @@ type Component interface {
 type categoryParser struct{}
 
 // Match tells if it's a Category from the name.
-func (categoryParser) Match(item source.Item) bool {
-	_, file := path.Split(item.Name())
+func (categoryParser) Match(name string) bool {
+	_, file := path.Split(name)
 	return file == catName
 }
 

@@ -32,8 +32,8 @@ func (s Segment) String() string {
 type segmentParser struct{}
 
 // Match tells if it's a Segment from the name.
-func (segmentParser) Match(item source.Item) bool {
-	_, file := path.Split(item.Name())
+func (segmentParser) Match(name string) bool {
+	_, file := path.Split(name)
 	return strings.ToLower(path.Ext(file)) == extSegment
 }
 
