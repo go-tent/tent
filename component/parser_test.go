@@ -1,9 +1,6 @@
 package component
 
 import (
-	"bytes"
-	"io"
-	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -11,8 +8,8 @@ import (
 )
 
 func TestParseNestedCategories(t *testing.T) {
-	src := testSource{
-		items: []testItem{
+	src := source.MockSource{
+		Items: []source.MockItem{
 			{"a/.category.yaml", "index: 2\nm: x"},
 			{"a/b/.category.yaml", "index: 7\nm: y"},
 			{"a/b/d/.category.yaml", "index: 20\nm: w"},
@@ -49,8 +46,8 @@ func TestParseNestedCategories(t *testing.T) {
 }
 
 func TestParseSegment(t *testing.T) {
-	src := testSource{
-		items: []testItem{
+	src := source.MockSource{
+		Items: []source.MockItem{
 			{"a.md", `---
 index: 10
 title: segment title
@@ -88,8 +85,8 @@ text`},
 }
 
 func TestParsePicture(t *testing.T) {
-	src := testSource{
-		items: []testItem{
+	src := source.MockSource{
+		Items: []source.MockItem{
 			{"a.jpg", `somebytes`},
 		},
 	}
@@ -122,30 +119,4 @@ func printCategory(t *testing.T, deep int, c *Category) {
 	for _, s := range c.Components {
 		t.Logf("%s- %+v", strings.Repeat("  ", deep+1), s)
 	}
-}
-
-type testSource struct {
-	items []testItem
-	i     int
-}
-
-func (t *testSource) Next() (source.Item, error) {
-	if t.i == len(t.items) {
-		return nil, nil
-	}
-	t.i++
-	return t.items[t.i-1], nil
-}
-
-type testItem struct {
-	name     string
-	contents string
-}
-
-func (t testItem) Name() string {
-	return t.name
-}
-
-func (t testItem) Content() (io.ReadCloser, error) {
-	return ioutil.NopCloser(bytes.NewBufferString(t.contents)), nil
 }

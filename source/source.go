@@ -2,8 +2,10 @@
 package source
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,6 +20,37 @@ type Source interface {
 type Item interface {
 	Name() string
 	Content() (io.ReadCloser, error)
+}
+
+// MockSource is a static Source.
+type MockSource struct {
+	Items []MockItem
+	i     int
+}
+
+// Next implements the Source interface.
+func (m *MockSource) Next() (Item, error) {
+	if m.i == len(m.Items) {
+		return nil, nil
+	}
+	m.i++
+	return m.Items[m.i-1], nil
+}
+
+// MockItem is a static Item.
+type MockItem struct {
+	ID       string
+	Contents string
+}
+
+// Name implements the Item interface.
+func (m MockItem) Name() string {
+	return m.ID
+}
+
+// Content implements the Item interface.
+func (m MockItem) Content() (io.ReadCloser, error) {
+	return ioutil.NopCloser(bytes.NewBufferString(m.Contents)), nil
 }
 
 // NewFileSource returns a new FileSource, using the given filters.
