@@ -2,6 +2,11 @@
 package component
 
 import (
+	"bufio"
+	"bytes"
+	"errors"
+	"io"
+
 	"gopkg.in/tent.v1/source"
 )
 
@@ -37,4 +42,27 @@ func Parse(src source.Source, parsers ...Parser) (*Category, error) {
 	}
 	root.sort()
 	return &root, nil
+}
+
+// ExtractMeta looks for "---\n" delimiters, returning what's between.
+func ExtractMeta(r *bufio.Reader) (io.Reader, error) {
+	row, err := r.ReadBytes('\n')
+	if err != nil {
+		return nil, err
+	}
+	if !bytes.Equal([]byte("---\n"), row) {
+		return nil, errors.New("Invalid header")
+	}
+	b := bytes.NewBuffer(nil)
+	for {
+		row, err := r.ReadBytes('\n')
+		if err != nil {
+			return nil, err
+		}
+		if bytes.Equal([]byte("---\n"), row) {
+			break
+		}
+		b.Write(row)
+	}
+	return b, nil
 }

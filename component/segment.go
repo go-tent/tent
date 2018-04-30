@@ -7,17 +7,17 @@ import (
 	"path"
 	"strings"
 
-	"gopkg.in/tent.v1/component/header"
 	"gopkg.in/tent.v1/source"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const extSegment = ".md"
 
 // Segment is an Article.
 type Segment struct {
-	ID    string
-	Index float64
-	Meta  map[string]string
+	ID    string            `yaml:"id"`
+	Index float64           `yaml:"index"`
+	Meta  map[string]string `yaml:",inline"`
 	Body  []byte
 }
 
@@ -46,14 +46,16 @@ func (segParser) Parse(root *Category, item source.Item) error {
 	}
 	defer contents.Close()
 
-	s := Segment{ID: strings.TrimSuffix(file, extSegment)}
 	b := bufio.NewReader(contents)
-	if err := header.ParseMeta(b, &s.Meta, true); err != nil {
+	header, err := ExtractMeta(b)
+	if err != nil {
 		return err
 	}
-	if err := header.ParseIndex(s.Meta, &s.Index); err != nil {
+	s := Segment{ID: strings.TrimSuffix(file, extSegment)}
+	if err := yaml.NewDecoder(header).Decode(&s); err != nil {
 		return err
 	}
+
 	body, err := ioutil.ReadAll(b)
 	if err != nil {
 		return err

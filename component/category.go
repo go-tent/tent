@@ -1,23 +1,22 @@
 package component
 
 import (
-	"bufio"
 	"fmt"
 	"path"
 	"sort"
 	"strings"
 
-	"gopkg.in/tent.v1/component/header"
 	"gopkg.in/tent.v1/source"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // Category is a parent node in the tree.
 type Category struct {
-	ID         string
-	Index      float64
-	Meta       map[string]string
-	Sub        []Category
-	Components []Component
+	ID         string            `yaml:"id"`
+	Index      float64           `yaml:"index"`
+	Meta       map[string]string `yaml:",inline"`
+	Sub        []Category        `yaml:"sub"`
+	Components []Component       `yaml:"components"`
 }
 
 // Order implements the Component interface.
@@ -78,10 +77,7 @@ func (catParser) Parse(root *Category, item source.Item) error {
 	defer contents.Close()
 	dir, _ := path.Split(item.Name())
 	c := Category{ID: path.Base(dir)}
-	if err := header.ParseMeta(bufio.NewReader(contents), &c.Meta, false); err != nil {
-		return err
-	}
-	if err := header.ParseIndex(c.Meta, &c.Index); err != nil {
+	if err := yaml.NewDecoder(contents).Decode(&c); err != nil {
 		return err
 	}
 	if dir := path.Dir(path.Clean(dir)); dir != "." {
