@@ -10,7 +10,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-// Category is a parent node in the tree.
+// Category is a branch node in the tree.
 type Category struct {
 	ID         string            `yaml:"id"`
 	Index      float64           `yaml:"index"`
@@ -38,10 +38,10 @@ func (c *Category) sort() {
 	}
 }
 
-// Ensure returns a child Category, creating all needed nodes.
-func (c *Category) Ensure(dir string) *Category {
+// ensure follows the path to a leaf node, creating all needed ones.
+func (c *Category) ensure(path string) *Category {
 item:
-	for _, id := range strings.FieldsFunc(dir, func(r rune) bool { return r == '/' }) {
+	for _, id := range strings.FieldsFunc(path, func(r rune) bool { return r == '/' }) {
 		for i := range c.Sub {
 			if c.Sub[i].ID == id {
 				c = &c.Sub[i]
@@ -59,30 +59,30 @@ type Component interface {
 	Order() float64
 }
 
-// catParser is the Parser for Category
+// catParser is the Parser for Category.
 type catParser struct{}
 
 // Match tells if it's a Category from the name.
 func (catParser) Match(name string) bool {
 	_, file := path.Split(name)
-	return file == catName
+	return file == ".category.yml"
 }
 
 // Parse populates the Category with Item contents.
-func (catParser) Parse(root *Category, item source.Item) error {
+func (catParser) Parse(c *Category, item source.Item) error {
 	contents, err := item.Content()
 	if err != nil {
 		return err
 	}
 	defer contents.Close()
 	dir, _ := path.Split(item.Name())
-	c := Category{ID: path.Base(dir)}
-	if err := yaml.NewDecoder(contents).Decode(&c); err != nil {
+	cat := Category{ID: path.Base(dir)}
+	if err := yaml.NewDecoder(contents).Decode(&cat); err != nil {
 		return err
 	}
 	if dir := path.Dir(path.Clean(dir)); dir != "." {
-		root = root.Ensure(dir)
+		c = c.ensure(dir)
 	}
-	root.Sub = append(root.Sub, c)
+	c.Sub = append(c.Sub, cat)
 	return nil
 }

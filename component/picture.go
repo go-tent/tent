@@ -23,13 +23,12 @@ func (p Picture) String() string {
 	return fmt.Sprintf("Picture:%s Size:%v", p.ID, len(p.Data))
 }
 
-// picParser is the Parser for Picture
+// picParser is the Parser for Picture.
 type picParser struct{}
 
 // Match tells if it's a Picture from the name.
 func (picParser) Match(name string) bool {
-	_, file := path.Split(name)
-	ext := strings.ToLower(path.Ext(file))
+	ext := strings.ToLower(path.Ext(name))
 	for _, e := range []string{".jpg", ".jpeg", ".png", ".bmp", ".gif"} {
 		if e == ext {
 			return true
@@ -39,8 +38,7 @@ func (picParser) Match(name string) bool {
 }
 
 // Parse populates the Picture with Item contents.
-func (picParser) Parse(root *Category, item source.Item) error {
-	dir, file := path.Split(item.Name())
+func (picParser) Parse(c *Category, item source.Item) error {
 	contents, err := item.Content()
 	if err != nil {
 		return err
@@ -51,9 +49,8 @@ func (picParser) Parse(root *Category, item source.Item) error {
 	if err != nil {
 		return err
 	}
-	cat := root.Ensure(dir)
-	cat.Components = append(cat.Components, &Picture{
-		ID:   file,
+	c.Components = append(c.Components, &Picture{
+		ID:   item.Name(),
 		Data: data,
 	})
 	return nil

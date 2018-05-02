@@ -6,31 +6,33 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"path"
 
 	"gopkg.in/tent.v1/source"
 )
 
-const (
-	catName = ".category.yaml"
-)
-
-// Parser is a Component parser
+// Parser is a Component parser.
 type Parser interface {
 	Match(name string) bool
-	Parse(root *Category, item source.Item) error
+	Parse(parent *Category, item source.Item) error
 }
 
-var baseParsers = []Parser{catParser{}, segParser{}, picParser{}}
-
 // Parse trasforms a Source in a Category tree.
-func Parse(src source.Source, parsers ...Parser) (*Category, error) {
-	var root = Category{ID: "root"}
+func Parse(src source.Source, extra ...Parser) (*Category, error) {
+	var (
+		root    = Category{ID: "root"}
+		parsers = make([]Parser, 0, 3+len(extra))
+	)
+	parsers = append(parsers, catParser{}, leaf{segParser{}}, leaf{picParser{}})
+	for _, p := range extra {
+		parsers = append(parsers, leaf{p})
+	}
 	for i, err := src.Next(); i != nil; i, err = src.Next() {
 		if err != nil {
 			return nil, err
 		}
 		name := i.Name()
-		for _, p := range append(baseParsers, parsers...) {
+		for _, p := range parsers {
 			if !p.Match(name) {
 				continue
 			}
@@ -66,3 +68,20 @@ func ExtractMeta(r *bufio.Reader) (io.Reader, error) {
 	}
 	return b, nil
 }
+
+// leaf is a wrapper for leaf node Parsers.
+type leaf struct {
+	Parser
+}
+
+// Parse calls the underlying Parser using the proper branch node and leafNode.
+func (l leaf) Parse(root *Category, item source.Item) error {
+	dir, _ := path.Split(item.Name())
+	return l.Parser.Parse(root.ensure(dir), leafItem{item})
+}
+
+type leafItem struct {
+	source.Item
+}
+
+func (l leafItem) Name() string { return path.Base(l.Item.Name()) }

@@ -10,10 +10,10 @@ import (
 func TestParseNestedCategories(t *testing.T) {
 	src := source.MockSource{
 		Items: []source.MockItem{
-			{"a/.category.yaml", "index: 2\nm: x"},
-			{"a/b/.category.yaml", "index: 7\nm: y"},
-			{"a/b/d/.category.yaml", "index: 20\nm: w"},
-			{"a/b/c/.category.yaml", "index: 12\nm: z"},
+			{ID: "a/.category.yml", Contents: "index: 2\nm: x"},
+			{ID: "a/b/.category.yml", Contents: "index: 7\nm: y"},
+			{ID: "a/b/d/.category.yml", Contents: "index: 20\nm: w"},
+			{ID: "a/b/c/.category.yml", Contents: "index: 12\nm: z"},
 		},
 	}
 	r, err := Parse(&src)
@@ -48,7 +48,7 @@ func TestParseNestedCategories(t *testing.T) {
 func TestParseSegment(t *testing.T) {
 	src := source.MockSource{
 		Items: []source.MockItem{
-			{"a.md", `---
+			{ID: "a.md", Contents: `---
 index: 10
 title: segment title
 ---
@@ -84,10 +84,52 @@ text`},
 	}
 }
 
+func TestParseNestedSegment(t *testing.T) {
+	src := source.MockSource{
+		Items: []source.MockItem{
+			{ID: "cat/a.md", Contents: `---
+index: 10
+title: segment title
+---
+# Title
+
+text`},
+		},
+	}
+	r, err := Parse(&src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer printCategory(t, 0, r)
+
+	if l := len(r.Sub); l != 1 {
+		t.Fatalf("Expected %d components, got %d", 1, l)
+	}
+	if l := len(r.Sub[0].Components); l != 1 {
+		t.Fatalf("Expected %d components, got %d", 1, l)
+	}
+	s, ok := r.Sub[0].Components[0].(*Segment)
+	if !ok {
+		t.Fatalf("Expected component to be a %T, got %T", new(Segment), r.Components[0])
+	}
+	if id := s.ID; id != "a" {
+		t.Fatalf("Expected %q segments, got %q", "a", id)
+	}
+	if i := s.Index; i != 10 {
+		t.Fatalf("Expected %v index, got %v", 10, i)
+	}
+	if e := map[string]string{"title": "segment title"}; len(s.Meta) != 1 || e["title"] != s.Meta["title"] {
+		t.Fatalf("Expected %v meta, got %v", e, s.Meta)
+	}
+	if e := "# Title\n\ntext"; string(s.Body) != e {
+		t.Fatalf("Expected %v body, got %v", e, string(s.Body))
+	}
+}
+
 func TestParsePicture(t *testing.T) {
 	src := source.MockSource{
 		Items: []source.MockItem{
-			{"a.jpg", `somebytes`},
+			{ID: "a.jpg", Contents: `somebytes`},
 		},
 	}
 	r, err := Parse(&src)
