@@ -1,11 +1,74 @@
 package component
 
 import (
+	"io"
 	"strings"
 	"testing"
 
 	"gopkg.in/tent.v1/source"
 )
+
+type MockParser struct {
+	prefix string
+	exts   []string
+}
+
+func (m MockParser) Format() (string, []string)                   { return m.prefix, m.exts }
+func (MockParser) Parse(_ string, _ io.Reader) (Component, error) { return nil, nil }
+
+func TestParseAnalyze(t *testing.T) {
+	testCases := map[bool][][]Parser{
+		true: {
+			{
+				MockParser{"d_", []string{".a"}},
+				MockParser{"m_", []string{".a"}},
+				MockParser{"s_", []string{".a"}},
+				MockParser{"d_", []string{".b"}},
+				MockParser{"m_", []string{".b"}},
+				MockParser{"s_", []string{".b"}},
+			}, {
+				MockParser{"", []string{".a", ".b"}},
+				MockParser{"", []string{".c", ".d"}},
+			},
+		},
+		false: {
+			{
+				MockParser{"m_", []string{}},
+			}, {
+				MockParser{"", []string{".a"}},
+			}, {
+				MockParser{"m_", []string{".a", ".b"}},
+			}, {
+				MockParser{"m_", []string{".a"}},
+				MockParser{"m_", []string{".a"}},
+			}, {
+				MockParser{"", []string{".a", ".b"}},
+				MockParser{"", []string{".b", ".c"}},
+			},
+			{
+				MockParser{"d_", []string{".a"}},
+				MockParser{"m_", []string{".a"}},
+				MockParser{"s_", []string{".a"}},
+				MockParser{"", []string{".a", ".b"}},
+				MockParser{"", []string{".c", ".d"}},
+			},
+			{
+				MockParser{"", []string{".a", ".b"}},
+				MockParser{"", []string{".c", ".d"}},
+				MockParser{"d_", []string{".a"}},
+				MockParser{"m_", []string{".a"}},
+				MockParser{"s_", []string{".a"}},
+			},
+		}}
+
+	for success, testList := range testCases {
+		for i, tc := range testList {
+			if err := detectCollisions(tc); (err == nil) != success {
+				t.Fatalf("[Test %v] Expected %v, got %v", i, success, err)
+			}
+		}
+	}
+}
 
 func TestParseNestedCategories(t *testing.T) {
 	src := source.MockSource{
@@ -48,7 +111,7 @@ func TestParseNestedCategories(t *testing.T) {
 func TestParseSegment(t *testing.T) {
 	src := source.MockSource{
 		Items: []source.MockItem{
-			{ID: "a.md", Contents: `---
+			{ID: "s_a.md", Contents: `---
 index: 10
 title: segment title
 ---
@@ -87,7 +150,7 @@ text`},
 func TestParseNestedSegment(t *testing.T) {
 	src := source.MockSource{
 		Items: []source.MockItem{
-			{ID: "cat/a.md", Contents: `---
+			{ID: "cat/s_a.md", Contents: `---
 index: 10
 title: segment title
 ---

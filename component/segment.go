@@ -3,15 +3,11 @@ package component
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
-	"path"
-	"strings"
 
-	"gopkg.in/tent.v1/source"
 	yaml "gopkg.in/yaml.v2"
 )
-
-const extSegment = ".md"
 
 // Segment is an Article.
 type Segment struct {
@@ -31,35 +27,23 @@ func (s Segment) String() string {
 // segParser is the Parser for Segment.
 type segParser struct{}
 
-// Match tells if it's a Segment from the name.
-func (segParser) Match(name string) bool {
-	return strings.ToLower(path.Ext(name)) == extSegment
-}
+// Match implements the Parser interface.
+func (segParser) Format() (string, []string) { return "s_", []string{".md"} }
 
 // Parse populates the Segment with Item contents.
-func (segParser) Parse(c *Category, item source.Item) error {
-	contents, err := item.Content()
-	if err != nil {
-		return err
-	}
-	defer contents.Close()
-
-	b := bufio.NewReader(contents)
+func (segParser) Parse(id string, r io.Reader) (Component, error) {
+	b := bufio.NewReader(r)
 	header, err := ExtractMeta(b)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	s := Segment{ID: strings.TrimSuffix(item.Name(), extSegment)}
+	s := Segment{ID: id}
 	if err := yaml.NewDecoder(header).Decode(&s); err != nil {
-		return err
+		return nil, err
 	}
-
-	body, err := ioutil.ReadAll(b)
+	s.Body, err = ioutil.ReadAll(b)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	s.Body = body
-
-	c.Components = append(c.Components, &s)
-	return nil
+	return &s, nil
 }

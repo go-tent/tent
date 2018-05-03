@@ -2,12 +2,8 @@ package component
 
 import (
 	"fmt"
-	"path"
 	"sort"
 	"strings"
-
-	"gopkg.in/tent.v1/source"
-	yaml "gopkg.in/yaml.v2"
 )
 
 // Category is a branch node in the tree.
@@ -57,32 +53,4 @@ item:
 // Component represents a leaf node.
 type Component interface {
 	Order() float64
-}
-
-// catParser is the Parser for Category.
-type catParser struct{}
-
-// Match tells if it's a Category from the name.
-func (catParser) Match(name string) bool {
-	_, file := path.Split(name)
-	return file == ".category.yml"
-}
-
-// Parse populates the Category with Item contents.
-func (catParser) Parse(c *Category, item source.Item) error {
-	contents, err := item.Content()
-	if err != nil {
-		return err
-	}
-	defer contents.Close()
-	dir, _ := path.Split(item.Name())
-	cat := Category{ID: path.Base(dir)}
-	if err := yaml.NewDecoder(contents).Decode(&cat); err != nil {
-		return err
-	}
-	if dir := path.Dir(path.Clean(dir)); dir != "." {
-		c = c.ensure(dir)
-	}
-	c.Sub = append(c.Sub, cat)
-	return nil
 }
