@@ -2,6 +2,8 @@ package component
 
 import (
 	"bufio"
+	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -33,7 +35,7 @@ func (segParser) Format() (string, []string) { return "s_", []string{".md"} }
 // Parse populates the Segment with Item contents.
 func (segParser) Parse(id string, r io.Reader) (Component, error) {
 	b := bufio.NewReader(r)
-	header, err := ExtractMeta(b)
+	header, err := extractMeta(b)
 	if err != nil {
 		return nil, err
 	}
@@ -46,4 +48,27 @@ func (segParser) Parse(id string, r io.Reader) (Component, error) {
 		return nil, err
 	}
 	return &s, nil
+}
+
+// extractMeta looks for "---\n" delimiters, returning what's between.
+func extractMeta(r *bufio.Reader) (io.Reader, error) {
+	row, err := r.ReadBytes('\n')
+	if err != nil {
+		return nil, err
+	}
+	if !bytes.Equal([]byte("---\n"), row) {
+		return nil, errors.New("Invalid header")
+	}
+	b := bytes.NewBuffer(nil)
+	for {
+		row, err := r.ReadBytes('\n')
+		if err != nil {
+			return nil, err
+		}
+		if bytes.Equal([]byte("---\n"), row) {
+			break
+		}
+		b.Write(row)
+	}
+	return b, nil
 }

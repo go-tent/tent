@@ -36,6 +36,9 @@ func (c *Category) sort() {
 
 // ensure follows the path to a leaf node, creating all needed ones.
 func (c *Category) ensure(path string) *Category {
+	if path == "" || path == "." {
+		return c
+	}
 item:
 	for _, id := range strings.FieldsFunc(path, func(r rune) bool { return r == '/' }) {
 		for i := range c.Sub {

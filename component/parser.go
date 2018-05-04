@@ -2,9 +2,6 @@
 package component
 
 import (
-	"bufio"
-	"bytes"
-	"errors"
 	"io"
 	"path"
 	"strings"
@@ -48,31 +45,17 @@ func Parse(src source.Source, extra ...Parser) (*Category, error) {
 
 func parseComponent(root *Category, i source.Item, parsers []Parser) error {
 	dir, file := path.Split(i.Name())
-	ext := path.Ext(file)
-parsers:
 	for _, p := range parsers {
-		prefix, validExts := p.Format()
-		if prefix != "" && !strings.HasPrefix(file, prefix) {
+		name := matchParser(p, file)
+		if name == "" {
 			continue
-		}
-		for i, e := range validExts {
-			if ext == e {
-				break
-			}
-			if i == len(validExts)-1 {
-				continue parsers
-			}
-		}
-		file = strings.TrimPrefix(file, prefix)
-		if len(validExts) == 1 {
-			file = strings.TrimSuffix(file, ext)
 		}
 		r, err := i.Content()
 		if err != nil {
 			return err
 		}
 		defer r.Close()
-		cmp, err := p.Parse(file, r)
+		cmp, err := p.Parse(name, r)
 		if err != nil {
 			return err
 		}
@@ -94,33 +77,26 @@ func parseCategory(root *Category, i source.Item) error {
 	if err := yaml.NewDecoder(contents).Decode(&cat); err != nil {
 		return err
 	}
-	parent := root
-	if dir := path.Dir(path.Clean(dir)); dir != "." {
-		parent = parent.ensure(dir)
-	}
+	parent := root.ensure(path.Dir(path.Clean(dir)))
 	parent.Sub = append(parent.Sub, cat)
 	return nil
 }
 
-// ExtractMeta looks for "---\n" delimiters, returning what's between.
-func ExtractMeta(r *bufio.Reader) (io.Reader, error) {
-	row, err := r.ReadBytes('\n')
-	if err != nil {
-		return nil, err
+func matchParser(p Parser, name string) string {
+	ext := path.Ext(name)
+	prefix, validExts := p.Format()
+	if prefix != "" && !strings.HasPrefix(name, prefix) {
+		return ""
 	}
-	if !bytes.Equal([]byte("---\n"), row) {
-		return nil, errors.New("Invalid header")
-	}
-	b := bytes.NewBuffer(nil)
-	for {
-		row, err := r.ReadBytes('\n')
-		if err != nil {
-			return nil, err
+	for _, e := range validExts {
+		if ext != e {
+			continue
 		}
-		if bytes.Equal([]byte("---\n"), row) {
-			break
+		name = strings.TrimPrefix(name, prefix)
+		if len(validExts) == 1 {
+			name = strings.TrimSuffix(name, ext)
 		}
-		b.Write(row)
+		return name
 	}
-	return b, nil
+	return ""
 }
