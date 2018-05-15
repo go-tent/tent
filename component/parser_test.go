@@ -8,56 +8,56 @@ import (
 	"gopkg.in/tent.v1/source"
 )
 
-type MockParser struct {
+type MockDecoder struct {
 	prefix string
 	exts   []string
 }
 
-func (m MockParser) Format() (string, []string)                   { return m.prefix, m.exts }
-func (MockParser) Parse(_ string, _ io.Reader) (Component, error) { return nil, nil }
+func (m MockDecoder) Format() (string, []string)                    { return m.prefix, m.exts }
+func (MockDecoder) Decode(_ string, _ io.Reader) (Component, error) { return nil, nil }
 
-func TestParseAnalyze(t *testing.T) {
-	testCases := map[bool][][]Parser{
+func TestDecodeAnalyze(t *testing.T) {
+	testCases := map[bool][][]Decoder{
 		true: {
 			{
-				MockParser{"d_", []string{".a"}},
-				MockParser{"m_", []string{".a"}},
-				MockParser{"s_", []string{".a"}},
-				MockParser{"d_", []string{".b"}},
-				MockParser{"m_", []string{".b"}},
-				MockParser{"s_", []string{".b"}},
+				MockDecoder{"d_", []string{".a"}},
+				MockDecoder{"m_", []string{".a"}},
+				MockDecoder{"s_", []string{".a"}},
+				MockDecoder{"d_", []string{".b"}},
+				MockDecoder{"m_", []string{".b"}},
+				MockDecoder{"s_", []string{".b"}},
 			}, {
-				MockParser{"", []string{".a", ".b"}},
-				MockParser{"", []string{".c", ".d"}},
+				MockDecoder{"", []string{".a", ".b"}},
+				MockDecoder{"", []string{".c", ".d"}},
 			},
 		},
 		false: {
 			{
-				MockParser{"m_", []string{}},
+				MockDecoder{"m_", []string{}},
 			}, {
-				MockParser{"", []string{".a"}},
+				MockDecoder{"", []string{".a"}},
 			}, {
-				MockParser{"m_", []string{".a", ".b"}},
+				MockDecoder{"m_", []string{".a", ".b"}},
 			}, {
-				MockParser{"m_", []string{".a"}},
-				MockParser{"m_", []string{".a"}},
+				MockDecoder{"m_", []string{".a"}},
+				MockDecoder{"m_", []string{".a"}},
 			}, {
-				MockParser{"", []string{".a", ".b"}},
-				MockParser{"", []string{".b", ".c"}},
+				MockDecoder{"", []string{".a", ".b"}},
+				MockDecoder{"", []string{".b", ".c"}},
 			},
 			{
-				MockParser{"d_", []string{".a"}},
-				MockParser{"m_", []string{".a"}},
-				MockParser{"s_", []string{".a"}},
-				MockParser{"", []string{".a", ".b"}},
-				MockParser{"", []string{".c", ".d"}},
+				MockDecoder{"d_", []string{".a"}},
+				MockDecoder{"m_", []string{".a"}},
+				MockDecoder{"s_", []string{".a"}},
+				MockDecoder{"", []string{".a", ".b"}},
+				MockDecoder{"", []string{".c", ".d"}},
 			},
 			{
-				MockParser{"", []string{".a", ".b"}},
-				MockParser{"", []string{".c", ".d"}},
-				MockParser{"d_", []string{".a"}},
-				MockParser{"m_", []string{".a"}},
-				MockParser{"s_", []string{".a"}},
+				MockDecoder{"", []string{".a", ".b"}},
+				MockDecoder{"", []string{".c", ".d"}},
+				MockDecoder{"d_", []string{".a"}},
+				MockDecoder{"m_", []string{".a"}},
+				MockDecoder{"s_", []string{".a"}},
 			},
 		}}
 
@@ -70,7 +70,7 @@ func TestParseAnalyze(t *testing.T) {
 	}
 }
 
-func TestParseNestedCategories(t *testing.T) {
+func TestDecodeNestedCategories(t *testing.T) {
 	src := source.MockSource{
 		Items: []source.MockItem{
 			{ID: "a/.category.yml", Contents: "index: 2\nm: x"},
@@ -79,7 +79,7 @@ func TestParseNestedCategories(t *testing.T) {
 			{ID: "a/b/c/.category.yml", Contents: "index: 12\nm: z"},
 		},
 	}
-	r, err := Parse(&src)
+	r, err := Decode(&src)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func TestParseNestedCategories(t *testing.T) {
 	}
 }
 
-func TestParseSegment(t *testing.T) {
+func TestDecodeSegment(t *testing.T) {
 	src := source.MockSource{
 		Items: []source.MockItem{
 			{ID: "s_a.md", Contents: `---
@@ -120,7 +120,7 @@ title: segment title
 text`},
 		},
 	}
-	r, err := Parse(&src)
+	r, err := Decode(&src)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,7 +147,7 @@ text`},
 	}
 }
 
-func TestParseNestedSegment(t *testing.T) {
+func TestDecodeNestedSegment(t *testing.T) {
 	src := source.MockSource{
 		Items: []source.MockItem{
 			{ID: "cat/s_a.md", Contents: `---
@@ -159,7 +159,7 @@ title: segment title
 text`},
 		},
 	}
-	r, err := Parse(&src)
+	r, err := Decode(&src)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -189,13 +189,13 @@ text`},
 	}
 }
 
-func TestParsePicture(t *testing.T) {
+func TestDecodePicture(t *testing.T) {
 	src := source.MockSource{
 		Items: []source.MockItem{
 			{ID: "a.jpg", Contents: `somebytes`},
 		},
 	}
-	r, err := Parse(&src)
+	r, err := Decode(&src)
 	if err != nil {
 		t.Fatal(err)
 	}

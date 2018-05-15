@@ -20,16 +20,16 @@ func (p Picture) String() string {
 	return fmt.Sprintf("Picture:%s Size:%v", p.ID, len(p.Data))
 }
 
-// picParser is the Parser for Picture.
-type picParser struct{}
+// picDecoder is the Decoder for Picture.
+type picDecoder struct{}
 
-// Match implements the Parser interface.
-func (picParser) Format() (string, []string) {
+// Match implements the Decoder interface.
+func (picDecoder) Format() (string, []string) {
 	return "", []string{".jpg", ".jpeg", ".png", ".bmp", ".gif"}
 }
 
-// Parse populates the Picture with Item contents.
-func (picParser) Parse(id string, r io.Reader) (Component, error) {
+// Decode populates the Picture with Item contents.
+func (picDecoder) Decode(id string, r io.Reader) (Component, error) {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err

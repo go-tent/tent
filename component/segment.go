@@ -26,14 +26,14 @@ func (s Segment) String() string {
 	return fmt.Sprintf("Segment:%s Idx:%v Meta:%v", s.ID, s.Index, s.Meta)
 }
 
-// segParser is the Parser for Segment.
-type segParser struct{}
+// segDecoder is the Decoder for Segment.
+type segDecoder struct{}
 
-// Match implements the Parser interface.
-func (segParser) Format() (string, []string) { return "s_", []string{".md"} }
+// Match implements the Decoder interface.
+func (segDecoder) Format() (string, []string) { return "s_", []string{".md"} }
 
-// Parse populates the Segment with Item contents.
-func (segParser) Parse(id string, r io.Reader) (Component, error) {
+// Decode populates the Segment with Item contents.
+func (segDecoder) Decode(id string, r io.Reader) (Component, error) {
 	b := bufio.NewReader(r)
 	header, err := extractMeta(b)
 	if err != nil {

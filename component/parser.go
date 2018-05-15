@@ -11,19 +11,19 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Parser is a Component parser.
-type Parser interface {
+// Decoder is a Component decoder.
+type Decoder interface {
 	// Format returns filename prefix and allowed extesions
 	Format() (prefix string, ext []string)
-	// Parse creates and returns the Component
-	Parse(id string, r io.Reader) (Component, error)
+	// Decode creates and returns the Component
+	Decode(id string, r io.Reader) (Component, error)
 }
 
-// Parse trasforms a Source in a Category tree.
-func Parse(src source.Source, extra ...Parser) (*Category, error) {
+// Decode trasforms a Source in a Category tree.
+func Decode(src source.Source, extra ...Decoder) (*Category, error) {
 	root := Category{ID: "root"}
-	parsers := append([]Parser{segParser{}, picParser{}}, extra...)
-	if err := detectCollisions(parsers); err != nil {
+	decoders := append([]Decoder{segDecoder{}, picDecoder{}}, extra...)
+	if err := detectCollisions(decoders); err != nil {
 		return nil, err
 	}
 	for i, err := src.Next(); i != nil; i, err = src.Next() {
@@ -33,10 +33,12 @@ func Parse(src source.Source, extra ...Parser) (*Category, error) {
 		name := i.Name()
 		_, file := path.Split(name)
 		if file == ".category.yml" {
-			parseCategory(&root, i)
+			if err := parseCategory(&root, i); err != nil {
+				return nil, err
+			}
 			continue
 		}
-		if err := parseComponent(&root, i, parsers); err != nil {
+		if err := parseComponent(&root, i, decoders); err != nil {
 			return nil, err
 		}
 	}
@@ -44,10 +46,10 @@ func Parse(src source.Source, extra ...Parser) (*Category, error) {
 	return &root, nil
 }
 
-func parseComponent(root *Category, i source.Item, parsers []Parser) error {
+func parseComponent(root *Category, i source.Item, decoders []Decoder) error {
 	dir, file := path.Split(i.Name())
-	for _, p := range parsers {
-		name := matchParser(p, file)
+	for _, p := range decoders {
+		name := matchDecoder(p, file)
 		if name == "" {
 			continue
 		}
@@ -56,7 +58,7 @@ func parseComponent(root *Category, i source.Item, parsers []Parser) error {
 			return err
 		}
 		defer r.Close()
-		cmp, err := p.Parse(name, r)
+		cmp, err := p.Decode(name, r)
 		if err != nil {
 			return fmt.Errorf("%s: %s", file, err)
 		}
@@ -83,7 +85,7 @@ func parseCategory(root *Category, i source.Item) error {
 	return nil
 }
 
-func matchParser(p Parser, name string) string {
+func matchDecoder(p Decoder, name string) string {
 	ext := path.Ext(name)
 	prefix, validExts := p.Format()
 	if prefix != "" && !strings.HasPrefix(name, prefix) {

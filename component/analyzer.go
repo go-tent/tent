@@ -4,19 +4,19 @@ import (
 	"fmt"
 )
 
-func detectCollisions(parsers []Parser) error {
+func detectCollisions(decoders []Decoder) error {
 	var taken = make(map[string]struct {
-		unique Parser
-		prefix map[string]Parser
+		unique Decoder
+		prefix map[string]Decoder
 	})
-	for _, p := range parsers {
+	for _, p := range decoders {
 		pre, exts := p.Format()
 		if err := validateFormat(pre, exts); err != nil {
 			return fmt.Errorf("%T: %s", p, err)
 		}
 		if ext := exts[0]; len(exts) == 1 {
 			if v, ok := taken[ext]; !ok {
-				v.prefix = make(map[string]Parser)
+				v.prefix = make(map[string]Decoder)
 				taken[ext] = v
 			}
 			if name := taken[ext].unique; name != nil {
