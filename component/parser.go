@@ -2,12 +2,13 @@
 package component
 
 import (
+	"fmt"
 	"io"
 	"path"
 	"strings"
 
 	"gopkg.in/tent.v1/source"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 // Parser is a Component parser.
@@ -57,7 +58,7 @@ func parseComponent(root *Category, i source.Item, parsers []Parser) error {
 		defer r.Close()
 		cmp, err := p.Parse(name, r)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %s", file, err)
 		}
 		cat := root.ensure(dir)
 		cat.Components = append(cat.Components, cmp)
@@ -67,15 +68,15 @@ func parseComponent(root *Category, i source.Item, parsers []Parser) error {
 }
 
 func parseCategory(root *Category, i source.Item) error {
+	dir, _ := path.Split(i.Name())
 	contents, err := i.Content()
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %s", dir, err)
 	}
 	defer contents.Close()
-	dir, _ := path.Split(i.Name())
 	cat := Category{ID: path.Base(dir)}
 	if err := yaml.NewDecoder(contents).Decode(&cat); err != nil {
-		return err
+		return fmt.Errorf("%s: %s", dir, err)
 	}
 	parent := root.ensure(path.Dir(path.Clean(dir)))
 	parent.Sub = append(parent.Sub, cat)

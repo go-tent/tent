@@ -8,7 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 // Segment is an Article.
@@ -52,23 +52,23 @@ func (segParser) Parse(id string, r io.Reader) (Component, error) {
 
 // extractMeta looks for "---\n" delimiters, returning what's between.
 func extractMeta(r *bufio.Reader) (io.Reader, error) {
-	row, err := r.ReadBytes('\n')
+	row, _, err := r.ReadLine()
 	if err != nil {
 		return nil, err
 	}
-	if !bytes.Equal([]byte("---\n"), row) {
+	if !bytes.Equal([]byte("---"), bytes.TrimSuffix(row, []byte("\r"))) {
 		return nil, errors.New("Invalid header")
 	}
 	b := bytes.NewBuffer(nil)
 	for {
-		row, err := r.ReadBytes('\n')
+		row, _, err := r.ReadLine()
 		if err != nil {
 			return nil, err
 		}
-		if bytes.Equal([]byte("---\n"), row) {
+		if bytes.Equal([]byte("---"), bytes.TrimSuffix(row, []byte("\r"))) {
 			break
 		}
-		b.Write(row)
+		fmt.Fprintln(b, string(row))
 	}
 	return b, nil
 }

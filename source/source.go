@@ -55,14 +55,14 @@ func (m MockItem) Content() (io.ReadCloser, error) {
 
 // NewFileSource returns a new FileSource, using the given filters.
 func NewFileSource(ctx context.Context, root string, filters ...PathFilter) Source {
-	src := FileSource{ch: make(chan FileItem)}
+	src := FileSource{ch: make(chan fileItem)}
 	go src.walk(ctx, root, filters)
 	return src
 }
 
 // FileSource takes a directory in the filesystem as source.
 type FileSource struct {
-	ch chan FileItem
+	ch chan fileItem
 }
 
 func (f FileSource) walk(ctx context.Context, root string, filters []PathFilter) {
@@ -81,7 +81,7 @@ func (f FileSource) walk(ctx context.Context, root string, filters []PathFilter)
 					return nil
 				}
 			}
-			f.ch <- FileItem{root: root, Path: path, err: err}
+			f.ch <- fileItem{root: root, Path: path, err: err}
 			return nil
 		}
 	})
@@ -100,20 +100,20 @@ func (f FileSource) Next() (Item, error) {
 	return item, nil
 }
 
-// FileItem represent an Item in the filesystem.
-type FileItem struct {
+// fileItem represent an Item in the filesystem.
+type fileItem struct {
 	Path string
 	root string
 	err  error
 }
 
 // Name implements the Item interface.
-func (f FileItem) Name() string {
+func (f fileItem) Name() string {
 	return strings.Replace(f.Path[len(f.root)+1:], `\`, `/`, -1)
 }
 
 // Content implements the Item interface.
-func (f FileItem) Content() (io.ReadCloser, error) {
+func (f fileItem) Content() (io.ReadCloser, error) {
 	file, err := os.Open(filepath.Join(f.root, f.Name()))
 	if err != nil {
 		return nil, err

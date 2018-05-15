@@ -17,18 +17,17 @@ func init() {
 }
 
 func TestFileSource(t *testing.T) {
-	baseTest(context.Background(), t, 2)
+	baseTest(t, NewFileSource(context.Background(), wd, ExtFilter(".go")), 4)
 }
 
 func TestFileSourceContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	baseTest(ctx, t, 0)
+	baseTest(t, NewFileSource(ctx, wd, ExtFilter(".go")), 0)
 }
 
-func baseTest(ctx context.Context, t *testing.T, expected int) {
+func baseTest(t *testing.T, src Source, expected int) {
 	var count int
-	src := NewFileSource(ctx, wd, ExtFilter(".go"))
 	for item, err := src.Next(); item != nil; item, err = src.Next() {
 		if err != nil {
 			t.Error(err)
