@@ -2,89 +2,23 @@ package component
 
 import (
 	"io"
-	"strings"
 	"testing"
 
 	"gopkg.in/tent.v1/source"
+	yaml "gopkg.in/yaml.v2"
 )
 
-type MockDecoder struct {
-	prefix string
-	exts   []string
-}
-
-func (m MockDecoder) Format() (string, []string)                    { return m.prefix, m.exts }
-func (MockDecoder) Decode(_ string, _ io.Reader) (Component, error) { return nil, nil }
-
-func TestDecodeAnalyze(t *testing.T) {
-	testCases := map[bool][][]Decoder{
-		true: {
-			{
-				MockDecoder{"d_", []string{".a"}},
-				MockDecoder{"m_", []string{".a"}},
-				MockDecoder{"s_", []string{".a"}},
-				MockDecoder{"d_", []string{".b"}},
-				MockDecoder{"m_", []string{".b"}},
-				MockDecoder{"s_", []string{".b"}},
-			}, {
-				MockDecoder{"", []string{".a", ".b"}},
-				MockDecoder{"", []string{".c", ".d"}},
-			},
-		},
-		false: {
-			{
-				MockDecoder{"m_", []string{}},
-			}, {
-				MockDecoder{"", []string{".a"}},
-			}, {
-				MockDecoder{"m_", []string{".a", ".b"}},
-			}, {
-				MockDecoder{"m_", []string{".a"}},
-				MockDecoder{"m_", []string{".a"}},
-			}, {
-				MockDecoder{"", []string{".a", ".b"}},
-				MockDecoder{"", []string{".b", ".c"}},
-			},
-			{
-				MockDecoder{"d_", []string{".a"}},
-				MockDecoder{"m_", []string{".a"}},
-				MockDecoder{"s_", []string{".a"}},
-				MockDecoder{"", []string{".a", ".b"}},
-				MockDecoder{"", []string{".c", ".d"}},
-			},
-			{
-				MockDecoder{"", []string{".a", ".b"}},
-				MockDecoder{"", []string{".c", ".d"}},
-				MockDecoder{"d_", []string{".a"}},
-				MockDecoder{"m_", []string{".a"}},
-				MockDecoder{"s_", []string{".a"}},
-			},
-		}}
-
-	for success, testList := range testCases {
-		for i, tc := range testList {
-			if err := detectCollisions(tc); (err == nil) != success {
-				t.Fatalf("[Test %v] Expected %v, got %v", i, success, err)
-			}
-		}
-	}
-}
-
 func TestDecodeNestedCategories(t *testing.T) {
-	src := source.MockSource{
-		Items: []source.MockItem{
-			{ID: "a/.category.yml", Contents: "index: 2\nm: x"},
-			{ID: "a/b/.category.yml", Contents: "index: 7\nm: y"},
-			{ID: "a/b/d/.category.yml", Contents: "index: 20\nm: w"},
-			{ID: "a/b/c/.category.yml", Contents: "index: 12\nm: z"},
-		},
+	items := []source.MockItem{
+		{ID: "a/.category.yml", Contents: "index: 2\nm: x"},
+		{ID: "a/b/.category.yml", Contents: "index: 7\nm: y"},
+		{ID: "a/b/d/.category.yml", Contents: "index: 20\nm: w"},
+		{ID: "a/b/c/.category.yml", Contents: "index: 12\nm: z"},
 	}
-	r, err := Decode(&src)
+	r, err := Decode(&source.MockSource{Items: items})
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer printCategory(t, 0, r)
-
 	if l := len(r.Sub); l != 1 {
 		t.Fatalf("Expected %d category, got %d", 1, l)
 	}
@@ -108,62 +42,38 @@ func TestDecodeNestedCategories(t *testing.T) {
 	}
 }
 
-func TestDecodeSegment(t *testing.T) {
-	src := source.MockSource{
-		Items: []source.MockItem{
-			{ID: "s_a.md", Contents: `---
-index: 10
-title: segment title
----
-# Title
-
-text`},
-		},
+func TestDecodeComponent(t *testing.T) {
+	items := []source.MockItem{
+		{ID: "m_hello.mock", Contents: `index: 10`},
 	}
-	r, err := Decode(&src)
+	r, err := Decode(&source.MockSource{Items: items}, mockDecoder{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer printCategory(t, 0, r)
 
 	if l := len(r.Components); l != 1 {
 		t.Fatalf("Expected %d components, got %d", 1, l)
 	}
-	s, ok := r.Components[0].(*Segment)
+	m, ok := r.Components[0].(mockCmp)
 	if !ok {
-		t.Fatalf("Expected component to be a %T, got %T", new(Segment), r.Components[0])
+		t.Fatalf("Expected component to be a %T, got %T", new(mockCmp), r.Components[0])
 	}
-	if id := s.ID; id != "a" {
+	if id := m.ID; id != "hello" {
 		t.Fatalf("Expected %q segments, got %q", "a", id)
 	}
-	if i := s.Index; i != 10 {
+	if i := m.Index; i != 10 {
 		t.Fatalf("Expected %v index, got %v", 10, i)
-	}
-	if e := map[string]string{"title": "segment title"}; len(s.Meta) != 1 || e["title"] != s.Meta["title"] {
-		t.Fatalf("Expected %v meta, got %v", e, s.Meta)
-	}
-	if e := "# Title\n\ntext"; string(s.Body) != e {
-		t.Fatalf("Expected %v body, got %v", e, string(s.Body))
 	}
 }
 
-func TestDecodeNestedSegment(t *testing.T) {
-	src := source.MockSource{
-		Items: []source.MockItem{
-			{ID: "cat/s_a.md", Contents: `---
-index: 10
-title: segment title
----
-# Title
-
-text`},
-		},
+func TestDecodeNestedComponent(t *testing.T) {
+	items := []source.MockItem{
+		{ID: "cat/m_hello.mock", Contents: `index: 10`},
 	}
-	r, err := Decode(&src)
+	r, err := Decode(&source.MockSource{Items: items}, mockDecoder{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer printCategory(t, 0, r)
 
 	if l := len(r.Sub); l != 1 {
 		t.Fatalf("Expected %d components, got %d", 1, l)
@@ -171,57 +81,35 @@ text`},
 	if l := len(r.Sub[0].Components); l != 1 {
 		t.Fatalf("Expected %d components, got %d", 1, l)
 	}
-	s, ok := r.Sub[0].Components[0].(*Segment)
+	m, ok := r.Sub[0].Components[0].(mockCmp)
 	if !ok {
-		t.Fatalf("Expected component to be a %T, got %T", new(Segment), r.Components[0])
+		t.Fatalf("Expected component to be a %T, got %T", mockCmp{}, r.Sub[0].Components[0])
 	}
-	if id := s.ID; id != "a" {
+	if id := m.ID; id != "hello" {
 		t.Fatalf("Expected %q segments, got %q", "a", id)
 	}
-	if i := s.Index; i != 10 {
+	if i := m.Index; i != 10 {
 		t.Fatalf("Expected %v index, got %v", 10, i)
 	}
-	if e := map[string]string{"title": "segment title"}; len(s.Meta) != 1 || e["title"] != s.Meta["title"] {
-		t.Fatalf("Expected %v meta, got %v", e, s.Meta)
-	}
-	if e := "# Title\n\ntext"; string(s.Body) != e {
-		t.Fatalf("Expected %v body, got %v", e, string(s.Body))
-	}
 }
 
-func TestDecodePicture(t *testing.T) {
-	src := source.MockSource{
-		Items: []source.MockItem{
-			{ID: "a.jpg", Contents: `somebytes`},
-		},
-	}
-	r, err := Decode(&src)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer printCategory(t, 0, r)
-
-	if l := len(r.Components); l != 1 {
-		t.Fatalf("Expected %d components, got %d", 1, l)
-	}
-	p, ok := r.Components[0].(*Picture)
-	if !ok {
-		t.Fatalf("Expected component to be a %T, got %T", new(Picture), r.Components[0])
-	}
-	if id := p.ID; id != "a.jpg" {
-		t.Fatalf("Expected %q segments, got %q", "a.jpg", id)
-	}
-	if e := "somebytes"; string(p.Data) != e {
-		t.Fatalf("Expected %v data, got %v", e, string(p.Data))
-	}
+type mockCmp struct {
+	ID    string
+	Index float64
 }
 
-func printCategory(t *testing.T, deep int, c *Category) {
-	t.Logf("%s> %+v", strings.Repeat("  ", deep), c)
-	for _, cat := range c.Sub {
-		printCategory(t, deep+1, &cat)
+func (m mockCmp) Order() float64 { return m.Index }
+
+func (mockCmp) Encode() (io.Reader, error) { return nil, nil }
+
+type mockDecoder struct{}
+
+func (mockDecoder) Format() (string, []string) { return "m_", []string{".mock"} }
+
+func (mockDecoder) Decode(id string, r io.Reader) (Component, error) {
+	m := mockCmp{ID: id}
+	if err := yaml.NewDecoder(r).Decode(&m); err != nil {
+		return nil, err
 	}
-	for _, s := range c.Components {
-		t.Logf("%s- %+v", strings.Repeat("  ", deep+1), s)
-	}
+	return m, nil
 }

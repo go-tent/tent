@@ -13,10 +13,10 @@ import (
 
 // Segment is an Article.
 type Segment struct {
-	ID    string            `yaml:"id"`
+	ID    string            `yaml:"-"`
 	Index float64           `yaml:"index"`
 	Meta  map[string]string `yaml:",inline"`
-	Body  []byte
+	Body  []byte            `yaml:"-"`
 }
 
 // Order implements the Component interface.
@@ -26,6 +26,20 @@ func (s Segment) String() string {
 	return fmt.Sprintf("Segment:%s Idx:%v Meta:%v", s.ID, s.Index, s.Meta)
 }
 
+// Encode returns Item contents.
+func (s *Segment) Encode() (io.Reader, error) {
+	b := bytes.NewBuffer(nil)
+	fmt.Fprintln(b, "---")
+	if err := yaml.NewEncoder(b).Encode(s); err != nil {
+		return nil, err
+	}
+	fmt.Fprintln(b, "---")
+	if _, err := io.Copy(b, bytes.NewReader(s.Body)); err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
 // segDecoder is the Decoder for Segment.
 type segDecoder struct{}
 
@@ -33,7 +47,10 @@ type segDecoder struct{}
 func (segDecoder) Format() (string, []string) { return "s_", []string{".md"} }
 
 // Decode populates the Segment with Item contents.
-func (segDecoder) Decode(id string, r io.Reader) (Component, error) {
+func (s segDecoder) Decode(id string, r io.Reader) (Component, error) {
+	return s.decode(id, r)
+}
+func (segDecoder) decode(id string, r io.Reader) (*Segment, error) {
 	b := bufio.NewReader(r)
 	header, err := extractMeta(b)
 	if err != nil {

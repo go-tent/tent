@@ -1,6 +1,7 @@
 package component
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,6 +12,11 @@ import (
 type Picture struct {
 	ID   string
 	Data []byte
+}
+
+// Encode returns Item contents.
+func (p *Picture) Encode() (io.Reader, error) {
+	return bytes.NewBuffer(p.Data), nil
 }
 
 // Order returns math.MaxFloat64, Pictures are shown last.
@@ -29,7 +35,11 @@ func (picDecoder) Format() (string, []string) {
 }
 
 // Decode populates the Picture with Item contents.
-func (picDecoder) Decode(id string, r io.Reader) (Component, error) {
+func (p picDecoder) Decode(id string, r io.Reader) (Component, error) {
+	return p.decode(id, r)
+}
+
+func (picDecoder) decode(id string, r io.Reader) (*Picture, error) {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err

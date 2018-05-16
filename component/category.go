@@ -1,18 +1,22 @@
 package component
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"sort"
 	"strings"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 // Category is a branch node in the tree.
 type Category struct {
-	ID         string            `yaml:"id"`
+	ID         string            `yaml:"-"`
 	Index      float64           `yaml:"index"`
 	Meta       map[string]string `yaml:",inline"`
-	Sub        []Category        `yaml:"sub"`
-	Components []Component       `yaml:"components"`
+	Sub        []Category        `yaml:"-"`
+	Components []Component       `yaml:"-"`
 }
 
 // Order implements the Component interface.
@@ -20,6 +24,15 @@ func (c *Category) Order() float64 { return c.Index }
 
 func (c *Category) String() string {
 	return fmt.Sprintf("Category:%s Idx:%v Meta:%v", c.ID, c.Index, c.Meta)
+}
+
+// Encode returns Item contents.
+func (c *Category) Encode() (io.Reader, error) {
+	b := bytes.NewBuffer(nil)
+	if err := yaml.NewEncoder(b).Encode(c); err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
 func (c *Category) sort() {
@@ -53,7 +66,12 @@ item:
 	return c
 }
 
-// Component represents a leaf node.
-type Component interface {
-	Order() float64
+type catDecoder struct{}
+
+func (catDecoder) decode(id string, r io.Reader) (*Category, error) {
+	c := Category{ID: id}
+	if err := yaml.NewDecoder(r).Decode(&c); err != nil {
+		return nil, err
+	}
+	return &c, nil
 }

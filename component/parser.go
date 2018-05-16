@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"gopkg.in/tent.v1/source"
-	"gopkg.in/yaml.v2"
 )
 
 // Decoder is a Component decoder.
@@ -17,6 +16,14 @@ type Decoder interface {
 	Format() (prefix string, ext []string)
 	// Decode creates and returns the Component
 	Decode(id string, r io.Reader) (Component, error)
+}
+
+// Component represents a leaf node.
+type Component interface {
+	// Order is used for sorting Componenets
+	Order() float64
+	// Encode returns Component's contents for source.Item
+	Encode() (io.Reader, error)
 }
 
 // Decode trasforms a Source in a Category tree.
@@ -46,6 +53,23 @@ func Decode(src source.Source, extra ...Decoder) (*Category, error) {
 	return &root, nil
 }
 
+func parseCategory(root *Category, i source.Item) error {
+	dir, _ := path.Split(i.Name())
+	contents, err := i.Content()
+	if err != nil {
+		return fmt.Errorf("%s: %s", dir, err)
+	}
+	defer contents.Close()
+
+	cat, err := catDecoder{}.decode(path.Base(dir), contents)
+	if err != nil {
+		return fmt.Errorf("%s: %s", dir, err)
+	}
+	parent := root.ensure(path.Dir(path.Clean(dir)))
+	parent.Sub = append(parent.Sub, *cat)
+	return nil
+}
+
 func parseComponent(root *Category, i source.Item, decoders []Decoder) error {
 	dir, file := path.Split(i.Name())
 	for _, p := range decoders {
@@ -66,22 +90,6 @@ func parseComponent(root *Category, i source.Item, decoders []Decoder) error {
 		cat.Components = append(cat.Components, cmp)
 		break
 	}
-	return nil
-}
-
-func parseCategory(root *Category, i source.Item) error {
-	dir, _ := path.Split(i.Name())
-	contents, err := i.Content()
-	if err != nil {
-		return fmt.Errorf("%s: %s", dir, err)
-	}
-	defer contents.Close()
-	cat := Category{ID: path.Base(dir)}
-	if err := yaml.NewDecoder(contents).Decode(&cat); err != nil {
-		return fmt.Errorf("%s: %s", dir, err)
-	}
-	parent := root.ensure(path.Dir(path.Clean(dir)))
-	parent.Sub = append(parent.Sub, cat)
 	return nil
 }
 
