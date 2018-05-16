@@ -21,7 +21,7 @@ type Item interface {
 // PathFilter is used to exclude/include files in a FileSource.
 type PathFilter func(string) bool
 
-// FilterPrefix filters files by the given suffix.
+// FilterSuffix filters files by the given suffix.
 func FilterSuffix(filter string) PathFilter {
 	return func(s string) bool { return strings.HasSuffix(s, filter) }
 }
@@ -31,14 +31,14 @@ func FilterPrefix(filter string) PathFilter {
 	return func(s string) bool { return strings.HasPrefix(s, filter) }
 }
 
-// MockSource is a static Source.
-type MockSource struct {
-	Items []MockItem
+// MemSource is a static Source.
+type MemSource struct {
+	Items []MemItem
 	i     int
 }
 
 // Next implements the Source interface.
-func (m *MockSource) Next() (Item, error) {
+func (m *MemSource) Next() (Item, error) {
 	if m.i == len(m.Items) {
 		return nil, nil
 	}
@@ -46,18 +46,18 @@ func (m *MockSource) Next() (Item, error) {
 	return m.Items[m.i-1], nil
 }
 
-// MockItem is a static Item.
-type MockItem struct {
+// MemItem is a static Item.
+type MemItem struct {
 	ID       string
 	Contents string
 }
 
 // Name implements the Item interface.
-func (m MockItem) Name() string {
+func (m MemItem) Name() string {
 	return m.ID
 }
 
 // Content implements the Item interface.
-func (m MockItem) Content() (io.ReadCloser, error) {
+func (m MemItem) Content() (io.ReadCloser, error) {
 	return ioutil.NopCloser(bytes.NewBufferString(m.Contents)), nil
 }

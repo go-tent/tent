@@ -9,13 +9,13 @@ import (
 )
 
 func TestDecodeNestedCategories(t *testing.T) {
-	items := []source.MockItem{
+	items := []source.MemItem{
 		{ID: "a/.category.yml", Contents: "index: 2\nm: x"},
 		{ID: "a/b/.category.yml", Contents: "index: 7\nm: y"},
 		{ID: "a/b/d/.category.yml", Contents: "index: 20\nm: w"},
 		{ID: "a/b/c/.category.yml", Contents: "index: 12\nm: z"},
 	}
-	r, err := Decode(&source.MockSource{Items: items})
+	r, err := Decode(&source.MemSource{Items: items})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,10 +43,10 @@ func TestDecodeNestedCategories(t *testing.T) {
 }
 
 func TestDecodeComponent(t *testing.T) {
-	items := []source.MockItem{
+	items := []source.MemItem{
 		{ID: "m_hello.mock", Contents: `index: 10`},
 	}
-	r, err := Decode(&source.MockSource{Items: items}, mockDecoder{})
+	r, err := Decode(&source.MemSource{Items: items}, mockDecoder{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,10 +67,10 @@ func TestDecodeComponent(t *testing.T) {
 }
 
 func TestDecodeNestedComponent(t *testing.T) {
-	items := []source.MockItem{
+	items := []source.MemItem{
 		{ID: "cat/m_hello.mock", Contents: `index: 10`},
 	}
-	r, err := Decode(&source.MockSource{Items: items}, mockDecoder{})
+	r, err := Decode(&source.MemSource{Items: items}, mockDecoder{})
 	if err != nil {
 		t.Fatal(err)
 	}
