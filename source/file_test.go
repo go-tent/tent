@@ -19,7 +19,7 @@ func init() {
 }
 
 func TestFileSource(t *testing.T) {
-	baseTest(t, NewFileSource(context.Background(), wd, FilterSuffix(".go"), func(s string) bool {
+	baseTest(t, NewFile(context.Background(), wd, FilterSuffix(".go"), func(s string) bool {
 		return strings.HasPrefix(filepath.Base(s), "file")
 	}), 2)
 }
@@ -27,5 +27,5 @@ func TestFileSource(t *testing.T) {
 func TestFileSourceContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	baseTest(t, NewFileSource(ctx, wd), 0)
+	baseTest(t, NewFile(ctx, wd), 0)
 }

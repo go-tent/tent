@@ -7,21 +7,23 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"gopkg.in/tent.v1/item"
 )
 
-// NewFileSource returns a new FileSource, using the given filters.
-func NewFileSource(ctx context.Context, root string, filters ...PathFilter) Source {
-	src := FileSource{ch: make(chan fileItem)}
+// NewFile returns a new File source, using the given filters.
+func NewFile(ctx context.Context, root string, filters ...PathFilter) File {
+	src := File{ch: make(chan fileItem)}
 	go src.walk(ctx, root, filters)
 	return src
 }
 
-// FileSource takes a directory in the filesystem as source.
-type FileSource struct {
+// File takes a directory in the filesystem as source.
+type File struct {
 	ch chan fileItem
 }
 
-func (f FileSource) walk(ctx context.Context, root string, filters []PathFilter) {
+func (f File) walk(ctx context.Context, root string, filters []PathFilter) {
 	done := ctx.Done()
 	filepath.Walk(root, func(path string, _ os.FileInfo, err error) error {
 		select {
@@ -37,7 +39,7 @@ func (f FileSource) walk(ctx context.Context, root string, filters []PathFilter)
 					return nil
 				}
 			}
-			f.ch <- fileItem{root: root, Path: path, err: err}
+			f.ch <- fileItem{Root: root, Path: path, Err: err}
 			return nil
 		}
 	})
@@ -45,13 +47,13 @@ func (f FileSource) walk(ctx context.Context, root string, filters []PathFilter)
 }
 
 // Next implements the Source interface.
-func (f FileSource) Next() (Item, error) {
+func (f File) Next() (item.Item, error) {
 	item, ok := <-f.ch
 	if !ok {
 		return nil, nil
 	}
-	if item.err != nil {
-		return nil, item.err
+	if item.Err != nil {
+		return nil, item.Err
 	}
 	return item, nil
 }
@@ -59,20 +61,20 @@ func (f FileSource) Next() (Item, error) {
 // fileItem represent an Item in the filesystem.
 type fileItem struct {
 	Path string
-	root string
-	err  error
+	Root string
+	Err  error
 }
 
 // Name implements the Item interface.
 func (f fileItem) Name() string {
-	return strings.Replace(f.Path[len(f.root)+1:], `\`, `/`, -1)
+	return strings.Replace(f.Path[len(f.Root)+1:], `\`, `/`, -1)
 }
 
 // Content implements the Item interface.
 func (f fileItem) Content() (io.ReadCloser, error) {
-	file, err := os.Open(filepath.Join(f.root, f.Name()))
+	file, err := os.Open(filepath.Join(f.Root, f.Name()))
 	if err != nil {
 		return nil, err
 	}
-	return file, err
+	return file, nil
 }

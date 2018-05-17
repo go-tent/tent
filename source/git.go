@@ -8,10 +8,11 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
+	"gopkg.in/tent.v1/item"
 )
 
 // NewGit returns a new Source
-func NewGit(ctx context.Context, tree *object.Tree, filters ...PathFilter) Source {
+func NewGit(ctx context.Context, tree *object.Tree, filters ...PathFilter) Git {
 	src := Git{ch: make(chan gitItem)}
 	go src.walk(ctx, tree, filters)
 	return src
@@ -42,7 +43,7 @@ func (g Git) walk(ctx context.Context, tree *object.Tree, filters []PathFilter) 
 }
 
 // Next implements the Source interface
-func (g Git) Next() (Item, error) {
+func (g Git) Next() (item.Item, error) {
 	item, ok := <-g.ch
 	if !ok {
 		return nil, nil

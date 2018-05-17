@@ -7,6 +7,7 @@ import (
 	"path"
 	"strings"
 
+	"gopkg.in/tent.v1/item"
 	"gopkg.in/tent.v1/source"
 )
 
@@ -22,7 +23,7 @@ type Decoder interface {
 type Component interface {
 	// Order is used for sorting Componenets
 	Order() float64
-	// Encode returns Component's contents for source.Item
+	// Encode returns Component's contents for Item
 	Encode() (io.Reader, error)
 }
 
@@ -53,7 +54,7 @@ func Decode(src source.Source, extra ...Decoder) (*Category, error) {
 	return &root, nil
 }
 
-func parseCategory(root *Category, i source.Item) error {
+func parseCategory(root *Category, i item.Item) error {
 	dir, _ := path.Split(i.Name())
 	contents, err := i.Content()
 	if err != nil {
@@ -70,7 +71,7 @@ func parseCategory(root *Category, i source.Item) error {
 	return nil
 }
 
-func parseComponent(root *Category, i source.Item, decoders []Decoder) error {
+func parseComponent(root *Category, i item.Item, decoders []Decoder) error {
 	dir, file := path.Split(i.Name())
 	for _, p := range decoders {
 		name := matchDecoder(p, file)
