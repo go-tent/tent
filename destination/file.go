@@ -1,11 +1,14 @@
 package destination
 
 import (
+	"context"
+	"crypto/sha1"
+	"encoding/hex"
+	"fmt"
 	"io"
 	"os"
 	"path"
 
-	"gopkg.in/tent.v1/hash"
 	"gopkg.in/tent.v1/item"
 )
 
@@ -19,8 +22,22 @@ type File struct {
 	root string
 }
 
+// Hash returns the SHA1 for the item.
+func (f *File) Hash(ctx context.Context, i item.Item) (string, error) {
+	r, err := os.Open(f.path(i))
+	if err != nil {
+		return "", err
+	}
+	defer r.Close()
+	h := sha1.New()
+	if _, err := io.Copy(h, r); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
 // Create adds a new Item to the Destination.
-func (f *File) Create(i item.Item) error {
+func (f *File) Create(ctx context.Context, i item.Item) error {
 	if f.exist(i) {
 		return os.ErrExist
 	}
@@ -28,22 +45,22 @@ func (f *File) Create(i item.Item) error {
 }
 
 // Update overwrites an Item in the Destination.
-func (f *File) Update(i item.Item, hash []byte) error {
+func (f *File) Update(ctx context.Context, i item.Item, hash string) error {
 	if !f.exist(i) {
 		return os.ErrNotExist
 	}
-	if err := f.ensureHash(i, hash); err != nil {
+	if err := f.ensureHash(ctx, i, hash); err != nil {
 		return err
 	}
 	return f.write(i, os.O_TRUNC)
 }
 
 // Delete removes an Item from the Destination.
-func (f *File) Delete(i item.Item, hash []byte) error {
+func (f *File) Delete(ctx context.Context, i item.Item, hash string) error {
 	if !f.exist(i) {
 		return os.ErrNotExist
 	}
-	if err := f.ensureHash(i, hash); err != nil {
+	if err := f.ensureHash(ctx, i, hash); err != nil {
 		return err
 	}
 	return os.Remove(f.path(i))
@@ -58,15 +75,13 @@ func (f *File) exist(i item.Item) bool {
 	return err == nil
 }
 
-func (f *File) ensureHash(i item.Item, h []byte) error {
-	r, err := os.Open(f.path(i))
+func (f *File) ensureHash(ctx context.Context, i item.Item, hash string) error {
+	h, err := f.Hash(ctx, i)
 	if err != nil {
 		return err
 	}
-	defer r.Close()
-
-	if err := hash.Verify(r, h); err != nil {
-		return err
+	if h != hash {
+		return fmt.Errorf("conflict (expected %s, got %s)", h, hash)
 	}
 	return nil
 }

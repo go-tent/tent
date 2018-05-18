@@ -1,10 +1,15 @@
 package destination
 
-import "gopkg.in/tent.v1/item"
+import (
+	"context"
+
+	"gopkg.in/tent.v1/item"
+)
 
 // Destination stores Items.
 type Destination interface {
-	Create(item item.Item) error
-	Update(item item.Item, hash []byte) error
-	Delete(item item.Item, hash []byte) error
+	Hash(ctx context.Context, i item.Item) (string, error)
+	Create(ctx context.Context, i item.Item) error
+	Update(ctx context.Context, i item.Item, hash string) error
+	Delete(ctx context.Context, i item.Item, hash string) error
 }
