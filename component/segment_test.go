@@ -2,17 +2,12 @@ package component
 
 import (
 	"bytes"
-	"io/ioutil"
 	"testing"
 )
 
 func TestSegment(t *testing.T) {
 	s1 := &Segment{ID: "a", Index: 10, Meta: map[string]string{"title": "segment"}, Body: []byte("# Title\n\ntext")}
-	r, err := s1.Encode()
-	if err != nil {
-		t.Fatal(err)
-	}
-	b, err := ioutil.ReadAll(r)
+	b, err := s1.Encode()
 	if err != nil {
 		t.Fatal(err)
 	}

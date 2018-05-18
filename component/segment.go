@@ -27,7 +27,7 @@ func (s Segment) String() string {
 }
 
 // Encode returns Item contents.
-func (s *Segment) Encode() (io.Reader, error) {
+func (s *Segment) Encode() ([]byte, error) {
 	b := bytes.NewBuffer(nil)
 	fmt.Fprintln(b, "---")
 	if err := yaml.NewEncoder(b).Encode(s); err != nil {
@@ -37,7 +37,7 @@ func (s *Segment) Encode() (io.Reader, error) {
 	if _, err := io.Copy(b, bytes.NewReader(s.Body)); err != nil {
 		return nil, err
 	}
-	return b, nil
+	return b.Bytes(), nil
 }
 
 // segDecoder is the Decoder for Segment.

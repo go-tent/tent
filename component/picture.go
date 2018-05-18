@@ -1,7 +1,6 @@
 package component
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,8 +14,8 @@ type Picture struct {
 }
 
 // Encode returns Item contents.
-func (p *Picture) Encode() (io.Reader, error) {
-	return bytes.NewBuffer(p.Data), nil
+func (p *Picture) Encode() ([]byte, error) {
+	return p.Data, nil
 }
 
 // Order returns math.MaxFloat64, Pictures are shown last.

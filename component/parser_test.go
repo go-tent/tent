@@ -100,7 +100,7 @@ type mockCmp struct {
 
 func (m mockCmp) Order() float64 { return m.Index }
 
-func (mockCmp) Encode() (io.Reader, error) { return nil, nil }
+func (mockCmp) Encode() ([]byte, error) { return nil, nil }
 
 type mockDecoder struct{}
 

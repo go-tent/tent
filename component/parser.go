@@ -24,7 +24,7 @@ type Component interface {
 	// Order is used for sorting Componenets
 	Order() float64
 	// Encode returns Component's contents for Item
-	Encode() (io.Reader, error)
+	Encode() ([]byte, error)
 }
 
 // Decode trasforms a Source in a Category tree.

@@ -2,17 +2,12 @@ package component
 
 import (
 	"bytes"
-	"io/ioutil"
 	"testing"
 )
 
 func TestPicture(t *testing.T) {
 	p1 := &Picture{ID: "a.jpg", Data: []byte("picbytes")}
-	r, err := p1.Encode()
-	if err != nil {
-		t.Fatal(err)
-	}
-	b, err := ioutil.ReadAll(r)
+	b, err := p1.Encode()
 	if err != nil {
 		t.Fatal(err)
 	}
