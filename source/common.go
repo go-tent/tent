@@ -23,3 +23,18 @@ func FilterSuffix(filter string) PathFilter {
 func FilterPrefix(filter string) PathFilter {
 	return func(s string) bool { return strings.HasPrefix(s, filter) }
 }
+
+// Memory is a static Source.
+type Memory struct {
+	Items []item.Memory
+	i     int
+}
+
+// Next implements the Source interface.
+func (m *Memory) Next() (item.Item, error) {
+	if m.i == len(m.Items) {
+		return nil, nil
+	}
+	m.i++
+	return m.Items[m.i-1], nil
+}

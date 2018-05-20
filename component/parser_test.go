@@ -4,18 +4,19 @@ import (
 	"io"
 	"testing"
 
-	"gopkg.in/tent.v1/memory"
+	"gopkg.in/tent.v1/item"
+	"gopkg.in/tent.v1/source"
 	"gopkg.in/yaml.v2"
 )
 
 func TestDecodeNestedCategories(t *testing.T) {
-	items := []memory.Item{
-		{ID: "a/.category.yml", Contents: "index: 2\nm: x"},
-		{ID: "a/b/.category.yml", Contents: "index: 7\nm: y"},
-		{ID: "a/b/d/.category.yml", Contents: "index: 20\nm: w"},
-		{ID: "a/b/c/.category.yml", Contents: "index: 12\nm: z"},
+	items := []item.Memory{
+		{ID: "a/.category.yml", Contents: []byte("index: 2\nm: x")},
+		{ID: "a/b/.category.yml", Contents: []byte("index: 7\nm: y")},
+		{ID: "a/b/d/.category.yml", Contents: []byte("index: 20\nm: w")},
+		{ID: "a/b/c/.category.yml", Contents: []byte("index: 12\nm: z")},
 	}
-	r, err := Decode(&memory.Source{Items: items})
+	r, err := Decode(&source.Memory{Items: items})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,10 +44,10 @@ func TestDecodeNestedCategories(t *testing.T) {
 }
 
 func TestDecodeComponent(t *testing.T) {
-	items := []memory.Item{
-		{ID: "m_hello.mock", Contents: `index: 10`},
+	items := []item.Memory{
+		{ID: "m_hello.mock", Contents: []byte(`index: 10`)},
 	}
-	r, err := Decode(&memory.Source{Items: items}, mockDecoder{})
+	r, err := Decode(&source.Memory{Items: items}, mockDecoder{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,10 +68,10 @@ func TestDecodeComponent(t *testing.T) {
 }
 
 func TestDecodeNestedComponent(t *testing.T) {
-	items := []memory.Item{
-		{ID: "cat/m_hello.mock", Contents: `index: 10`},
+	items := []item.Memory{
+		{ID: "cat/m_hello.mock", Contents: []byte(`index: 10`)},
 	}
-	r, err := Decode(&memory.Source{Items: items}, mockDecoder{})
+	r, err := Decode(&source.Memory{Items: items}, mockDecoder{})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
-	"gopkg.in/tent.v1/memory"
+	"gopkg.in/tent.v1/item"
 )
 
 func TestGithubAPI(t *testing.T) {
@@ -18,7 +18,7 @@ func TestGithubAPI(t *testing.T) {
 		&oauth2.Token{AccessToken: env["TOKEN"]},
 	)))
 	dest := NewGihubAPI(ctx, client, RepoCfg{Owner: env["OWNER"], Repo: env["REPO"], Branch: env["BRANCH"]})
-	item := memory.Item{ID: "test/.category.yml", Contents: "index: 10\ntitle: this is a test"}
+	item := item.Memory{ID: "test/.category.yml", Contents: []byte("index: 10\ntitle: this is a test")}
 
 	if err := dest.Create(ctx, item); err != nil {
 		t.Fatalf("Create: %s", err)
@@ -29,7 +29,7 @@ func TestGithubAPI(t *testing.T) {
 		t.Fatalf("Hash: %s", err)
 	}
 
-	item.Contents = "index: 10\ntitle: this is a test, updated value"
+	item.Contents = append(item.Contents, []byte(", updated value")...)
 	if err := dest.Update(ctx, item, h); err != nil {
 		t.Fatalf("Update: %s", err)
 	}

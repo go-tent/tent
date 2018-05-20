@@ -7,14 +7,13 @@ import (
 	"testing"
 
 	"gopkg.in/tent.v1/item"
-	"gopkg.in/tent.v1/memory"
 )
 
 func TestFile(t *testing.T) {
 	var (
 		root = "."
 		dest = NewFile(root)
-		i    = memory.Item{ID: "id", Contents: "contents"}
+		i    = item.Memory{ID: "id", Contents: []byte("contents")}
 		ctx  = context.Background()
 	)
 	os.Remove(path.Join(root, i.ID))
