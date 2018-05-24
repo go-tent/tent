@@ -43,7 +43,7 @@ func (s *Segment) Encode() ([]byte, error) {
 // segDecoder is the Decoder for Segment.
 type segDecoder struct{}
 
-// Match implements the Decoder interface.
+// Format implements the Decoder interface.
 func (segDecoder) Format() (string, []string) { return "s_", []string{".md"} }
 
 // Decode populates the Segment with Item contents.

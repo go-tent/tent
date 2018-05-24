@@ -27,12 +27,12 @@ func (c *Category) String() string {
 }
 
 // Encode returns Item contents.
-func (c *Category) Encode() (io.Reader, error) {
+func (c *Category) Encode() ([]byte, error) {
 	b := bytes.NewBuffer(nil)
 	if err := yaml.NewEncoder(b).Encode(c); err != nil {
 		return nil, err
 	}
-	return b, nil
+	return b.Bytes(), nil
 }
 
 func (c *Category) sort() {

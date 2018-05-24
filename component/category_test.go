@@ -2,17 +2,12 @@ package component
 
 import (
 	"bytes"
-	"io/ioutil"
 	"testing"
 )
 
 func TestCategory(t *testing.T) {
 	c1 := Category{ID: "a", Index: 7, Meta: map[string]string{"title": "hello"}}
-	r, err := c1.Encode()
-	if err != nil {
-		t.Fatal(err)
-	}
-	b, err := ioutil.ReadAll(r)
+	b, err := c1.Encode()
 	if err != nil {
 		t.Fatal(err)
 	}
