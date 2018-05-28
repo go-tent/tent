@@ -1,5 +1,5 @@
 // Package component implement Source parsing in a Category/Component tree.
-package component
+package core
 
 import (
 	"fmt"
