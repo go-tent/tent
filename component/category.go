@@ -19,6 +19,12 @@ type Category struct {
 	Components []Component       `yaml:"-"`
 }
 
+// GetID implements the Component interface.
+func (c *Category) GetID() string { return c.ID }
+
+// Format implements the Component interface.
+func (c *Category) Format() (string, []string) { return "", nil }
+
 // Order implements the Component interface.
 func (c *Category) Order() float64 { return c.Index }
 
@@ -66,9 +72,12 @@ item:
 	return c
 }
 
-type catDecoder struct{}
+// Decode returns a new Category with Item contents.
+func (c *Category) Decode(id string, r io.Reader) (Component, error) {
+	return c.decode(id, r)
+}
 
-func (catDecoder) decode(id string, r io.Reader) (*Category, error) {
+func (*Category) decode(id string, r io.Reader) (*Category, error) {
 	c := Category{ID: id}
 	if err := yaml.NewDecoder(r).Decode(&c); err != nil {
 		return nil, err

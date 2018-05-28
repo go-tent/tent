@@ -10,11 +10,14 @@ type MockDecoder struct {
 	exts   []string
 }
 
+func (MockDecoder) GetID() string                                   { return "" }
 func (m MockDecoder) Format() (string, []string)                    { return m.prefix, m.exts }
 func (MockDecoder) Decode(_ string, _ io.Reader) (Component, error) { return nil, nil }
+func (MockDecoder) Order() float64                                  { return 0 }
+func (MockDecoder) Encode() ([]byte, error)                         { return nil, nil }
 
 func TestDecodeAnalyze(t *testing.T) {
-	testCases := map[bool][][]Decoder{
+	testCases := map[bool][][]Component{
 		true: {
 			{
 				MockDecoder{"d_", []string{".a"}},

@@ -4,19 +4,19 @@ import (
 	"fmt"
 )
 
-func detectCollisions(decoders []Decoder) error {
+func detectCollisions(cmps []Component) error {
 	var taken = make(map[string]struct {
-		unique Decoder
-		prefix map[string]Decoder
+		unique Component
+		prefix map[string]Component
 	})
-	for _, p := range decoders {
+	for _, p := range cmps {
 		pre, exts := p.Format()
 		if err := validateFormat(pre, exts); err != nil {
 			return fmt.Errorf("%T: %s", p, err)
 		}
 		if ext := exts[0]; len(exts) == 1 {
 			if v, ok := taken[ext]; !ok {
-				v.prefix = make(map[string]Decoder)
+				v.prefix = make(map[string]Component)
 				taken[ext] = v
 			}
 			if name := taken[ext].unique; name != nil {

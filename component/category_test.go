@@ -15,7 +15,7 @@ func TestCategory(t *testing.T) {
 	if !bytes.Equal(b, []byte(exp)) {
 		t.Fatalf("Expected %q, got %q", exp, string(b))
 	}
-	c2, err := catDecoder{}.decode(c1.ID, bytes.NewBufferString(exp))
+	c2, err := (*Category).decode(nil, c1.ID, bytes.NewBufferString(exp))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -58,7 +58,7 @@ title: form
 	if !bytes.Equal(b, []byte(exp)) {
 		t.Fatalf("Expected %q, got %q", exp, string(b))
 	}
-	f2, err := formDecoder{}.decode(f1.ID, bytes.NewBufferString(exp))
+	f2, err := (*Form).decode(nil, f1.ID, bytes.NewBufferString(exp))
 	if err != nil {
 		t.Fatal(err)
 	}

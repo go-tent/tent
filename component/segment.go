@@ -19,6 +19,9 @@ type Segment struct {
 	Body  []byte            `yaml:"-"`
 }
 
+// GetID implements the Component interface.
+func (s *Segment) GetID() string { return s.ID }
+
 // Order implements the Component interface.
 func (s *Segment) Order() float64 { return s.Index }
 
@@ -40,17 +43,14 @@ func (s *Segment) Encode() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-// segDecoder is the Decoder for Segment.
-type segDecoder struct{}
-
 // Format implements the Decoder interface.
-func (segDecoder) Format() (string, []string) { return "s_", []string{".md"} }
+func (*Segment) Format() (string, []string) { return "s_", []string{".md"} }
 
-// Decode populates the Segment with Item contents.
-func (s segDecoder) Decode(id string, r io.Reader) (Component, error) {
+// Decode returns a new Segment with Item contents.
+func (s *Segment) Decode(id string, r io.Reader) (Component, error) {
 	return s.decode(id, r)
 }
-func (segDecoder) decode(id string, r io.Reader) (*Segment, error) {
+func (*Segment) decode(id string, r io.Reader) (*Segment, error) {
 	b := bufio.NewReader(r)
 	header, err := extractMeta(b)
 	if err != nil {

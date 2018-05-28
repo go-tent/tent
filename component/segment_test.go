@@ -15,7 +15,7 @@ func TestSegment(t *testing.T) {
 	if !bytes.Equal(b, []byte(exp)) {
 		t.Fatalf("Expected %q, got %q", exp, string(b))
 	}
-	s2, err := segDecoder{}.decode(s1.ID, bytes.NewBufferString(exp))
+	s2, err := (*Segment).decode(nil, s1.ID, bytes.NewBufferString(exp))
 	if err != nil {
 		t.Fatal(err)
 	}

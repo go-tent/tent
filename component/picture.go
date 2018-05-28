@@ -13,6 +13,9 @@ type Picture struct {
 	Data []byte
 }
 
+// GetID implements the Component interface.
+func (p *Picture) GetID() string { return p.ID }
+
 // Encode returns Item contents.
 func (p *Picture) Encode() ([]byte, error) {
 	return p.Data, nil
@@ -25,20 +28,17 @@ func (p Picture) String() string {
 	return fmt.Sprintf("Picture:%s Size:%v", p.ID, len(p.Data))
 }
 
-// picDecoder is the Decoder for Picture.
-type picDecoder struct{}
-
 // Match implements the Decoder interface.
-func (picDecoder) Format() (string, []string) {
+func (*Picture) Format() (string, []string) {
 	return "", []string{".jpg", ".jpeg", ".png", ".bmp", ".gif"}
 }
 
-// Decode populates the Picture with Item contents.
-func (p picDecoder) Decode(id string, r io.Reader) (Component, error) {
+// Decode returns a new Picture with Item contents.
+func (p *Picture) Decode(id string, r io.Reader) (Component, error) {
 	return p.decode(id, r)
 }
 
-func (picDecoder) decode(id string, r io.Reader) (*Picture, error) {
+func (*Picture) decode(id string, r io.Reader) (*Picture, error) {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err

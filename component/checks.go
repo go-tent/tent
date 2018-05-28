@@ -16,6 +16,9 @@ type Checks struct {
 	List  []Check           `yaml:"list,omitempty"`
 }
 
+// GetID implements the Component interface.
+func (c *Checks) GetID() string { return c.ID }
+
 // Order implements the Component interface.
 func (c *Checks) Order() float64 { return c.Index }
 
@@ -32,27 +35,24 @@ func (c *Checks) Encode() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-// Check is a checkbox.
-type Check struct {
-	Text     string  `yaml:"text"`
-	Label    bool    `yaml:"label,omitempty"`
-	Children []Check `yaml:"children,omitempty"`
-}
-
-// checksDecoder is the Decoder for Checks.
-type checksDecoder struct{}
-
 // Format implements the Decoder interface.
-func (checksDecoder) Format() (string, []string) { return "c_", []string{".yml"} }
+func (Checks) Format() (string, []string) { return "c_", []string{".yml"} }
 
-// Decode populates the Segment with Item contents.
-func (s checksDecoder) Decode(id string, r io.Reader) (Component, error) {
-	return s.decode(id, r)
+// Decode returns a new Checks with Item contents.
+func (c *Checks) Decode(id string, r io.Reader) (Component, error) {
+	return c.decode(id, r)
 }
-func (checksDecoder) decode(id string, r io.Reader) (*Checks, error) {
+func (*Checks) decode(id string, r io.Reader) (*Checks, error) {
 	c := Checks{ID: id}
 	if err := yaml.NewDecoder(r).Decode(&c); err != nil {
 		return nil, err
 	}
 	return &c, nil
+}
+
+// Check is a checkbox.
+type Check struct {
+	Text     string  `yaml:"text"`
+	Label    bool    `yaml:"label,omitempty"`
+	Children []Check `yaml:"children,omitempty"`
 }

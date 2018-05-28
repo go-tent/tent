@@ -16,6 +16,9 @@ type Form struct {
 	Screens []FormScreen      `yaml:"screens"`
 }
 
+// GetID implements the Component interface.
+func (f *Form) GetID() string { return f.ID }
+
 // Order implements the Component interface.
 func (f *Form) Order() float64 {
 	return f.Index
@@ -48,17 +51,15 @@ type FormItem struct {
 	Meta     map[string]interface{} `yaml:",inline"`
 }
 
-// formDecoder is the Decoder for Form.
-type formDecoder struct{}
-
 // Format implements the Decoder interface.
-func (formDecoder) Format() (string, []string) { return "f_", []string{".yml"} }
+func (*Form) Format() (string, []string) { return "f_", []string{".yml"} }
 
-// Decode populates the Segment with Item contents.
-func (s formDecoder) Decode(id string, r io.Reader) (Component, error) {
-	return s.decode(id, r)
+// Decode returns a new Form with Item contents.
+func (f *Form) Decode(id string, r io.Reader) (Component, error) {
+	return f.decode(id, r)
 }
-func (formDecoder) decode(id string, r io.Reader) (*Form, error) {
+
+func (*Form) decode(id string, r io.Reader) (*Form, error) {
 	c := Form{ID: id}
 	if err := yaml.NewDecoder(r).Decode(&c); err != nil {
 		return nil, err

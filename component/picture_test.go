@@ -15,7 +15,7 @@ func TestPicture(t *testing.T) {
 	if !bytes.Equal(b, []byte(exp)) {
 		t.Fatalf("Expected %q, got %q", exp, string(b))
 	}
-	p2, err := picDecoder{}.decode(p1.ID, bytes.NewBufferString(exp))
+	p2, err := (*Picture).decode(nil, p1.ID, bytes.NewBufferString(exp))
 	if err != nil {
 		t.Fatal(err)
 	}

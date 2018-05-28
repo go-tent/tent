@@ -53,7 +53,7 @@ title: sample checklist
 	if !bytes.Equal(b, []byte(exp)) {
 		t.Fatalf("Expected %q, got %q", exp, string(b))
 	}
-	c2, err := checksDecoder{}.decode(c1.ID, bytes.NewBufferString(exp))
+	c2, err := (*Checks).decode(nil, c1.ID, bytes.NewBufferString(exp))
 	if err != nil {
 		t.Fatal(err)
 	}

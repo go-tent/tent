@@ -2,6 +2,7 @@ package component
 
 import (
 	"io"
+	"log"
 	"testing"
 
 	"gopkg.in/tent.v1/item"
@@ -16,8 +17,11 @@ func TestDecodeNestedCategories(t *testing.T) {
 		{ID: "a/b/d/.category.yml", Contents: []byte("index: 20\nm: w")},
 		{ID: "a/b/c/.category.yml", Contents: []byte("index: 12\nm: z")},
 	}
-	r, err := Decode(&source.Memory{Items: items})
+	r, err := NewRoot()
 	if err != nil {
+		log.Fatalf("%s", err)
+	}
+	if err := r.Decode(&source.Memory{Items: items}); err != nil {
 		t.Fatal(err)
 	}
 	if l := len(r.Sub); l != 1 {
@@ -47,8 +51,11 @@ func TestDecodeComponent(t *testing.T) {
 	items := []item.Memory{
 		{ID: "m_hello.mock", Contents: []byte(`index: 10`)},
 	}
-	r, err := Decode(&source.Memory{Items: items}, mockDecoder{})
+	r, err := NewRoot(mockCmp{})
 	if err != nil {
+		log.Fatalf("%s", err)
+	}
+	if err := r.Decode(&source.Memory{Items: items}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -71,8 +78,11 @@ func TestDecodeNestedComponent(t *testing.T) {
 	items := []item.Memory{
 		{ID: "cat/m_hello.mock", Contents: []byte(`index: 10`)},
 	}
-	r, err := Decode(&source.Memory{Items: items}, mockDecoder{})
+	r, err := NewRoot(mockCmp{})
 	if err != nil {
+		log.Fatalf("%s", err)
+	}
+	if err := r.Decode(&source.Memory{Items: items}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -99,15 +109,14 @@ type mockCmp struct {
 	Index float64
 }
 
+func (m mockCmp) GetID() string  { return m.ID }
 func (m mockCmp) Order() float64 { return m.Index }
 
 func (mockCmp) Encode() ([]byte, error) { return nil, nil }
 
-type mockDecoder struct{}
+func (mockCmp) Format() (string, []string) { return "m_", []string{".mock"} }
 
-func (mockDecoder) Format() (string, []string) { return "m_", []string{".mock"} }
-
-func (mockDecoder) Decode(id string, r io.Reader) (Component, error) {
+func (mockCmp) Decode(id string, r io.Reader) (Component, error) {
 	m := mockCmp{ID: id}
 	if err := yaml.NewDecoder(r).Decode(&m); err != nil {
 		return nil, err
