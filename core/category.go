@@ -13,7 +13,7 @@ import (
 // Category is a branch node in the tree.
 type Category struct {
 	ID         string            `yaml:"-"`
-	Index      float64           `yaml:"index"`
+	Index      float64           `yaml:"index,omitempty"`
 	Meta       map[string]string `yaml:",inline"`
 	Sub        []Category        `yaml:"-"`
 	Components []Component       `yaml:"-"`

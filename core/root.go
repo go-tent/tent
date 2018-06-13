@@ -25,6 +25,9 @@ type Component interface {
 	Encode() ([]byte, error)
 }
 
+// Components is a list of the available Components.
+var Components = []Component{new(Segment), new(Picture), new(Checks), new(Form)}
+
 func NewItem(prefix []string, cmp Component) (item.Item, error) {
 	dir := path.Join(prefix...)
 	if cat, ok := cmp.(*Category); ok {

@@ -14,7 +14,7 @@ import (
 // Segment is an Article.
 type Segment struct {
 	ID    string            `yaml:"-"`
-	Index float64           `yaml:"index"`
+	Index float64           `yaml:"index,omitempty"`
 	Meta  map[string]string `yaml:",inline"`
 	Body  []byte            `yaml:"-"`
 }

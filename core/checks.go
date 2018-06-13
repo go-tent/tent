@@ -11,7 +11,7 @@ import (
 // Checks represents a list of Checkboxes.
 type Checks struct {
 	ID    string            `yaml:"-"`
-	Index float64           `yaml:"index"`
+	Index float64           `yaml:"index,omitempty"`
 	Meta  map[string]string `yaml:",inline"`
 	List  []Check           `yaml:"list,omitempty"`
 }
@@ -52,7 +52,7 @@ func (*Checks) decode(id string, r io.Reader) (*Checks, error) {
 
 // Check is a checkbox.
 type Check struct {
-	Text     string  `yaml:"text"`
-	Label    bool    `yaml:"label,omitempty"`
+	Check    string  `yaml:"check,omitempty"`
+	Label    string  `yaml:"label,omitempty"`
 	Children []Check `yaml:"children,omitempty"`
 }

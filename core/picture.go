@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,6 +12,13 @@ import (
 type Picture struct {
 	ID   string
 	Data []byte
+}
+
+func (p *Picture) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"ID":   p.ID,
+		"Size": len(p.Data),
+	})
 }
 
 // GetID implements the Component interface.

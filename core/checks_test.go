@@ -13,18 +13,16 @@ func TestChecks(t *testing.T) {
 		Meta:  map[string]string{"title": "sample checklist"},
 		List: []Check{
 			{
-				Text:  "fruits",
-				Label: true,
+				Label: "fruits",
 				Children: []Check{
-					{Text: "apple"},
-					{Text: "pear"},
-					{Text: "melon"},
+					{Check: "apple"},
+					{Check: "pear"},
+					{Check: "melon"},
 					{
-						Text:  "citrus",
-						Label: true,
+						Label: "citrus",
 						Children: []Check{
-							{Text: "lemon"},
-							{Text: "orange"},
+							{Check: "lemon"},
+							{Check: "orange"},
 						},
 					},
 				},
@@ -37,17 +35,15 @@ func TestChecks(t *testing.T) {
 	}
 	exp := `index: 10
 list:
-- text: fruits
-  label: true
+- label: fruits
   children:
-  - text: apple
-  - text: pear
-  - text: melon
-  - text: citrus
-    label: true
+  - check: apple
+  - check: pear
+  - check: melon
+  - label: citrus
     children:
-    - text: lemon
-    - text: orange
+    - check: lemon
+    - check: orange
 title: sample checklist
 `
 	if !bytes.Equal(b, []byte(exp)) {
