@@ -14,7 +14,7 @@ func TestRepo(t *testing.T) {
 	if err := r.Update(); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := r.Tree("refs/remotes/origin/v1"); err != nil {
+	if _, err := r.Commit("refs/remotes/origin/v1"); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -24,11 +24,15 @@ func TestGit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tree, err := r.Tree("refs/remotes/origin/v1")
+	commit, err := r.Commit("refs/remotes/origin/v1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	baseTest(t, NewGit(context.Background(), tree, func(s string) bool {
+	git, err := NewGit(context.Background(), commit, func(s string) bool {
 		return strings.HasPrefix(s, "source/common")
-	}), 2)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	baseTest(t, git, 2)
 }

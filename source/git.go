@@ -12,10 +12,14 @@ import (
 )
 
 // NewGit returns a new Source
-func NewGit(ctx context.Context, tree *object.Tree, filters ...PathFilter) Git {
+func NewGit(ctx context.Context, commit *object.Commit, filters ...PathFilter) (Git, error) {
+	tree, err := commit.Tree()
+	if err != nil {
+		return Git{}, err
+	}
 	src := Git{ch: make(chan gitItem)}
 	go src.walk(ctx, tree, filters)
-	return src
+	return src, nil
 }
 
 // Git takes a git repo as origin
@@ -68,16 +72,17 @@ func (i gitItem) Content() (io.ReadCloser, error) {
 }
 
 // NewRepo returns a new repo
-func NewRepo(address string) (*Repo, error) {
-	repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{URL: address})
+func NewRepo(url string) (*Repo, error) {
+	repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{URL: url})
 	if err != nil {
 		return nil, err
 	}
-	return &Repo{repo: repo}, nil
+	return &Repo{URL: url, repo: repo}, nil
 }
 
 // Repo is a git repository
 type Repo struct {
+	URL  string
 	repo *git.Repository
 }
 
@@ -90,15 +95,11 @@ func (r *Repo) Update() error {
 	return nil
 }
 
-// Tree returns the tree for the given reference (example: refs/remotes/origin/master)
-func (r *Repo) Tree(reference string) (*object.Tree, error) {
+// Commit returns the Commit for the given reference (example: refs/remotes/origin/master)
+func (r *Repo) Commit(reference string) (*object.Commit, error) {
 	hash, err := r.repo.Reference(plumbing.ReferenceName(reference), false)
 	if err != nil {
 		return nil, err
 	}
-	commit, err := r.repo.CommitObject(hash.Hash())
-	if err != nil {
-		return nil, err
-	}
-	return commit.Tree()
+	return r.repo.CommitObject(hash.Hash())
 }
