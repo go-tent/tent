@@ -13,14 +13,14 @@ func TestForm(t *testing.T) {
 		Meta:  map[string]string{"title": "form"},
 		Screens: []FormScreen{
 			{
-				Name: "1",
+				Meta: Map{"title": "1"},
 				Items: []FormItem{
 					{Name: "field1", Type: "text", Required: true, Meta: map[string]interface{}{"label": "Field 1"}},
 					{Name: "field2", Type: "select", Meta: map[string]interface{}{"label": "Field 2", "option": []interface{}{"option1", "option2"}}},
 				},
 			},
 			{
-				Name: "2",
+				Meta: Map{"title": "2"},
 				Items: []FormItem{
 					{Name: "field3", Type: "checkbox"},
 					{Name: "field4", Type: "date"},
@@ -35,8 +35,7 @@ func TestForm(t *testing.T) {
 
 	exp := `index: 10
 screens:
-- name: "1"
-  items:
+- items:
   - name: field1
     type: text
     required: true
@@ -47,12 +46,13 @@ screens:
     option:
     - option1
     - option2
-- name: "2"
-  items:
+  title: "1"
+- items:
   - name: field3
     type: checkbox
   - name: field4
     type: date
+  title: "2"
 title: form
 `
 	if !bytes.Equal(b, []byte(exp)) {
@@ -76,8 +76,8 @@ title: form
 	}
 	for i := range f1.Screens {
 		s1, s2 := f1.Screens[i], f2.Screens[i]
-		if s1.Name != s2.Name {
-			t.Fatalf("Expected %v screen name, got %v", s1.Name, s2.Name)
+		if s1.Meta["title"] != s2.Meta["title"] {
+			t.Fatalf("Expected %v screen Title, got %v", s1.Meta["title"], s2.Meta["title"])
 		}
 		if l1, l2 := len(s1.Items), len(s2.Items); l1 != l2 {
 			t.Fatalf("Expected %v items, got %v", l1, l2)

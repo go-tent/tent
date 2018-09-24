@@ -56,7 +56,7 @@ func (*Form) decode(id string, r io.Reader) (*Form, error) {
 
 // FormScreen is a Form Screen
 type FormScreen struct {
-	Name  string     `yaml:"name"`
+	Meta  Map        `yaml:",inline"`
 	Items []FormItem `yaml:"items"`
 }
 
