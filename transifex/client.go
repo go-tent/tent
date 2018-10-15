@@ -26,11 +26,20 @@ type Client struct {
 	project      string
 }
 
-func (c *Client) buildURL(path string) string {
-	return fmt.Sprintf("https://www.transifex.com/api/2/project/%s/%s", c.project, path)
+func (c *Client) makeURL(path string, args ...interface{}) string {
+	return fmt.Sprintf(
+		"https://api.transifex.com/organizations/%s/projects/%s/%s",
+		c.organisation, c.project, fmt.Sprintf(path, args...),
+	)
+}
+func (c *Client) legacyURL(path string, args ...interface{}) string {
+	return fmt.Sprintf(
+		"https://www.transifex.com/api/2/project/%s/%s",
+		c.project, fmt.Sprintf(path, args...),
+	)
 }
 
-func (c *Client) request(method, path string, r, v interface{}) error {
+func (c *Client) request(method, url string, r, v interface{}) error {
 	var body io.Reader
 	if r != nil {
 		b := bytes.NewBuffer(nil)
@@ -40,7 +49,7 @@ func (c *Client) request(method, path string, r, v interface{}) error {
 		body = b
 	}
 
-	req, err := http.NewRequest(method, c.buildURL(path), body)
+	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return fmt.Errorf("create request: %s", err.Error())
 	}
@@ -54,16 +63,16 @@ func (c *Client) request(method, path string, r, v interface{}) error {
 
 func (c *Client) decodeResp(r *http.Response, v interface{}) error {
 	defer r.Body.Close()
-	d := json.NewDecoder(r.Body)
 	if r.StatusCode >= 400 {
 		var errResp ErrResponse
-		if err := d.Decode(&errResp); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&errResp); err != nil {
+
 			return fmt.Errorf("error decode: %s", err.Error())
 		}
 		return errResp
 	}
 	if v != nil {
-		if err := d.Decode(v); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(v); err != nil {
 			return fmt.Errorf("response decode: %s", err.Error())
 		}
 	}
@@ -71,29 +80,49 @@ func (c *Client) decodeResp(r *http.Response, v interface{}) error {
 }
 
 func (c *Client) Project() (p Project, err error) {
-	return p, c.request("GET", "", nil, &p)
+	return p, c.request("GET", c.legacyURL(""), nil, &p)
+}
+
+func (c *Client) AddLanguage(lang string, coord ...string) (err error) {
+	return c.request("POST", c.legacyURL("languages/"), map[string]interface{}{"language_code": lang, "coordinators": coord}, nil)
 }
 
 func (c *Client) ListResources() (r []Resource, err error) {
-	return r, c.request("GET", "resources/", nil, &r)
+	return r, c.request("GET", c.legacyURL("resources/"), nil, &r)
+}
+
+func (c *Client) UpdateName(slug, name string) (err error) {
+	return c.request("PUT", c.legacyURL("resource/%s/", slug), map[string]string{"slug": slug, "name": name}, nil)
+}
+
+func (c *Client) ResourceDetail(slug string) (r ResourceDetail, err error) {
+	return r, c.request("GET", c.makeURL("resources/%s/", slug), nil, &r)
 }
 
 func (c *Client) CreateResource(u UploadResourceRequest) (r Response, err error) {
-	return r, c.request("POST", "resources/", u, &r)
+	return r, c.request("POST", c.legacyURL("resources/"), u, &r)
 }
 
 func (c *Client) UpdateResource(slug, content string) (r Response, err error) {
-	return r, c.request("PUT", fmt.Sprintf("resource/%s/content/", slug), map[string]string{"slug": slug, "content": content}, &r)
+	return r, c.request("PUT", c.legacyURL("resource/%s/content/", slug), map[string]string{"slug": slug, "content": content}, &r)
 }
 
 func (c *Client) DeleteResource(slug string) (err error) {
-	return c.request("DELETE", fmt.Sprintf("resource/%s/", slug), nil, nil)
+	return c.request("DELETE", c.legacyURL("resource/%s/", slug), nil, nil)
 }
 
 func (c *Client) UpdateTranslation(slug, lang, content string) (r Response, err error) {
-	return r, c.request("PUT", fmt.Sprintf("resource/%s/translation/%s", slug, lang), map[string]string{"content": content}, &r)
+	return r, c.request("PUT", c.legacyURL("resource/%s/translation/%s", slug, lang), map[string]string{"content": content}, &r)
 }
 
 func (c *Client) GetTranslation(slug, lang string) (r map[string]interface{}, err error) {
-	return r, c.request("GET", fmt.Sprintf("resource/%s/translation/%s", slug, lang), nil, &r)
+	return r, c.request("GET", c.legacyURL("resource/%s/translation/%s", slug, lang), nil, &r)
+}
+
+func (c *Client) GetStrings(slug, lang string) (r []ResourceString, err error) {
+	return r, c.request("GET", c.legacyURL("resource/%s/translation/%s/strings/", slug, lang), nil, &r)
+}
+
+func (c *Client) SetStringTags(slug, hash string, tags ...string) (err error) {
+	return c.request("PUT", c.legacyURL("resource/%s/source/%s/", slug, hash), map[string][]string{"tags": tags}, nil)
 }

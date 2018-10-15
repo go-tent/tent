@@ -1,6 +1,7 @@
 package transifex
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -38,49 +39,51 @@ type Project struct {
 		Code string `json:"code"`
 		Name string `json:"name"`
 	} `json:"source_language"`
-	Type            string      `json:"type"`
-	LogoURL         string      `json:"logo_url"`
-	Description     string      `json:"description"`
-	Stringcount     int         `json:"stringcount"`
-	Wordcount       int         `json:"wordcount"`
-	LongDescription string      `json:"long_description"`
-	WebsiteURL      string      `json:"website_url"`
-	Maintainers     []string    `json:"maintainers"`
-	Created         time.Time   `json:"created"`
-	LastUpdate      interface{} `json:"last_update"`
-	Private         bool        `json:"private"`
-	RepositoryURL   string      `json:"repository_url"`
-	Archived        bool        `json:"archived"`
+	Type            string    `json:"type"`
+	LogoURL         string    `json:"logo_url"`
+	Description     string    `json:"description"`
+	Stringcount     int       `json:"stringcount"`
+	Wordcount       int       `json:"wordcount"`
+	LongDescription string    `json:"long_description"`
+	WebsiteURL      string    `json:"website_url"`
+	Maintainers     []string  `json:"maintainers"`
+	Created         time.Time `json:"created"`
+	LastUpdate      time.Time `json:"last_update"`
+	Private         bool      `json:"private"`
+	RepositoryURL   string    `json:"repository_url"`
+	Archived        bool      `json:"archived"`
 	Team            struct {
 		Name string `json:"name"`
 		ID   int    `json:"id"`
 	} `json:"team"`
-	Stats struct {
-		Es struct {
-			Translated struct {
-				Stringcount  int         `json:"stringcount"`
-				LastActivity interface{} `json:"last_activity"`
-				Name         string      `json:"name"`
-				Wordcount    int         `json:"wordcount"`
-				Percentage   float64     `json:"percentage"`
-			} `json:"translated"`
-			Reviewed1 struct {
-				Stringcount  int         `json:"stringcount"`
-				LastActivity interface{} `json:"last_activity"`
-				Name         string      `json:"name"`
-				Wordcount    int         `json:"wordcount"`
-				Percentage   float64     `json:"percentage"`
-			} `json:"reviewed_1"`
-		} `json:"es"`
-	} `json:"stats"`
+	Stats map[string]map[string]Stat `json:"stats"`
+}
+
+type Stat struct {
+	Wordcount    int       `json:"wordcount"`
+	LastActivity time.Time `json:"last_activity"`
+	Percentage   float64   `json:"percentage"`
+	Stringcount  int       `json:"stringcount"`
+	Name         string    `json:"name"`
 }
 
 type BaseResource struct {
-	Slug     string `json:"slug"`
-	Name     string `json:"name"`
-	I18nType string `json:"i18n_type"`
-	Priority string `json:"priority"`
-	Category string `json:"category"`
+	ID         int      `json:"id,omitempty"`
+	Slug       string   `json:"slug"`
+	Name       string   `json:"name"`
+	I18nType   string   `json:"i18n_type"`
+	Priority   string   `json:"priority"`
+	Categories []string `json:"categories"`
+}
+
+type ResourceDetail struct {
+	BaseResource
+	Stringcount        int                        `json:"stringcount"`
+	Wordcount          int                        `json:"wordcount"`
+	Created            time.Time                  `json:"created"`
+	LastUpdate         time.Time                  `json:"last_update"`
+	AcceptTranslations bool                       `json:"accept_translations"`
+	Stats              map[string]map[string]Stat `json:"stats"`
 }
 
 type Resource struct {
@@ -107,9 +110,23 @@ type Response struct {
 	Deleted int `json:"strings_delete"`
 }
 
+type ResourceString struct {
+	Comment      string `json:"comment"`
+	Context      string `json:"context"`
+	Key          string `json:"key"`
+	StringHash   string `json:"string_hash"`
+	Reviewed     bool   `json:"reviewed"`
+	Pluralized   bool   `json:"pluralized"`
+	SourceString string `json:"source_string"`
+	Translation  string `json:"translation"`
+}
+
 func (r *Response) UnmarshalJSON(raw []byte) error {
 	var dst interface{}
 	if err := json.Unmarshal(raw, &dst); err != nil {
+		if parts := bytes.Split(bytes.Trim(raw, " \t\n"), []byte{'\n'}); len(parts) == 3 {
+			return nil
+		}
 		return err
 	}
 	switch v := dst.(type) {
