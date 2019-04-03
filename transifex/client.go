@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -22,9 +23,12 @@ func NewClient(apiKey, org, project string) *Client {
 
 type Client struct {
 	client       *http.Client
+	ticker       *time.Ticker
 	organisation string
 	project      string
 }
+
+func (c *Client) SetTicker(t *time.Ticker) { c.ticker = t }
 
 func (c *Client) makeURL(path string, args ...interface{}) string {
 	return fmt.Sprintf(
@@ -48,17 +52,25 @@ func (c *Client) request(method, url string, r, v interface{}) error {
 		}
 		body = b
 	}
-
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return fmt.Errorf("create request: %s", err.Error())
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if c.ticker != nil {
+		<-c.ticker.C
+	}
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("execute: %s", err.Error())
 	}
-	return c.decodeResp(resp, v)
+	b, ok := v.(*[]byte)
+	if !ok {
+		return c.decodeResp(resp, v)
+	}
+	defer resp.Body.Close()
+	*b, err = ioutil.ReadAll(resp.Body)
+	return err
 }
 
 func (c *Client) decodeResp(r *http.Response, v interface{}) error {
@@ -66,7 +78,8 @@ func (c *Client) decodeResp(r *http.Response, v interface{}) error {
 	if r.StatusCode >= 400 {
 		var errResp ErrResponse
 		if err := json.NewDecoder(r.Body).Decode(&errResp); err != nil {
-
+			b, _ := ioutil.ReadAll(r.Body)
+			fmt.Println(r.Request.URL, string(b))
 			return fmt.Errorf("error decode: %s", err.Error())
 		}
 		return errResp
@@ -117,6 +130,10 @@ func (c *Client) UpdateTranslation(slug, lang, content string) (r Response, err 
 
 func (c *Client) GetTranslation(slug, lang string) (r map[string]interface{}, err error) {
 	return r, c.request("GET", c.legacyURL("resource/%s/translation/%s", slug, lang), nil, &r)
+}
+
+func (c *Client) GetTranslationFile(slug, lang string) (b []byte, err error) {
+	return b, c.request("GET", c.legacyURL("resource/%s/translation/%s?file", slug, lang), nil, &b)
 }
 
 func (c *Client) GetStrings(slug, lang string) (r []ResourceString, err error) {

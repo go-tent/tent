@@ -3,12 +3,13 @@ package transifex
 import (
 	"os"
 	"testing"
+	"time"
 )
 
 var (
-	_APIKey  = os.Getenv("TRANSIFEX_API_KEY")
-	_Org     = os.Getenv("TRANSIFEX_ORGANISATION")
-	_Project = os.Getenv("TRANSIFEX_PROJECT")
+	_APIKey  = os.Getenv("TX_API_KEY")
+	_Org     = os.Getenv("TX_ORG")
+	_Project = os.Getenv("TX_PROJ")
 )
 
 func TestClient(t *testing.T) {
@@ -41,6 +42,7 @@ another: eso es.
 `
 	)
 	c := NewClient(_APIKey, _Org, _Project)
+	c.SetTicker(time.NewTicker(time.Hour / 6000))
 	proj, err := c.Project()
 	if err != nil {
 		t.Fatal(err)
@@ -85,4 +87,9 @@ another: eso es.
 		t.Fatalf("%s", err)
 	}
 	t.Logf("%+v", tx)
+	file, err := c.GetTranslationFile(slug, lang)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	t.Logf("%s", file)
 }

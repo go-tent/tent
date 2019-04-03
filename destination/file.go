@@ -102,7 +102,6 @@ func (f *File) write(i item.Item, mode int) error {
 		return err
 	}
 	defer w.Close()
-
 	_, err = io.Copy(w, r)
 	return err
 }
