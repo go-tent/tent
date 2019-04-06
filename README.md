@@ -1,4 +1,4 @@
 # Tent
-[![GoDoc](https://godoc.org/gopkg.in/tent.v1?status.svg)](https://godoc.org/gopkg.in/tent.v1)
+[![GoDoc](https://godoc.org/github.com/go-tent/tent?status.svg)](https://godoc.org/github.com/go-tent/tent)
 
 Tent is a flexible content management system that uses markdown files.

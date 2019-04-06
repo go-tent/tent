@@ -69,6 +69,9 @@ func (c *Client) request(method, url string, r, v interface{}) error {
 		return c.decodeResp(resp, v)
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("error with %s", req.URL)
+	}
 	*b, err = ioutil.ReadAll(resp.Body)
 	return err
 }

@@ -7,8 +7,8 @@ import (
 	"path"
 	"strings"
 
-	"gopkg.in/tent.v1/item"
-	"gopkg.in/tent.v1/source"
+	"github.com/go-tent/tent/item"
+	"github.com/go-tent/tent/source"
 )
 
 // Component represents a leaf node.
@@ -138,7 +138,7 @@ func (r *Root) decodeComponent(i item.Item) (Component, error) {
 		defer r.Close()
 		cmp, err := p.Decode(name, r)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %s", file, err)
+			return nil, fmt.Errorf("%s: %s", i.Name(), err)
 		}
 		return cmp, nil
 	}

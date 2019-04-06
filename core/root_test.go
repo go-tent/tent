@@ -5,8 +5,8 @@ import (
 	"log"
 	"testing"
 
-	"gopkg.in/tent.v1/item"
-	"gopkg.in/tent.v1/source"
+	"github.com/go-tent/tent/item"
+	"github.com/go-tent/tent/source"
 	"gopkg.in/yaml.v2"
 )
 

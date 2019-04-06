@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gopkg.in/tent.v1/item"
+	"github.com/go-tent/tent/item"
 )
 
 // NewFile returns a new File source, using the given filters.

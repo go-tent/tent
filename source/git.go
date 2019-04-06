@@ -8,7 +8,7 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
-	"gopkg.in/tent.v1/item"
+	"github.com/go-tent/tent/item"
 )
 
 // NewGit returns a new Source

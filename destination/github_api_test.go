@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
-	"gopkg.in/tent.v1/item"
+	"github.com/go-tent/tent/item"
 )
 
 func TestGithubAPI(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 	"os"
 	"path"
 
-	"gopkg.in/tent.v1/item"
+	"github.com/go-tent/tent/item"
 )
 
 // NewFile returns a new File destination.

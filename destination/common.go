@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"gopkg.in/tent.v1/item"
+	"github.com/go-tent/tent/item"
 )
 
 // Destination stores Items.

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/github"
-	"gopkg.in/tent.v1/item"
+	"github.com/go-tent/tent/item"
 )
 
 // RepoCfg specifies the Repo used by GithubAPI

@@ -6,7 +6,7 @@ import (
 	"path"
 	"testing"
 
-	"gopkg.in/tent.v1/item"
+	"github.com/go-tent/tent/item"
 )
 
 func TestFile(t *testing.T) {

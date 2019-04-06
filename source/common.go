@@ -3,7 +3,7 @@ package source
 import (
 	"strings"
 
-	"gopkg.in/tent.v1/item"
+	"github.com/go-tent/tent/item"
 )
 
 // Source is an origin of Items.
