@@ -48,6 +48,11 @@ another: eso es.
 		t.Fatal(err)
 	}
 	t.Log(proj)
+	langs, err := c.Languages()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(langs)
 	res, err := c.ListResources()
 	if err != nil {
 		t.Fatal(err)

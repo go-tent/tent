@@ -99,6 +99,10 @@ func (c *Client) Project() (p Project, err error) {
 	return p, c.request("GET", c.legacyURL(""), nil, &p)
 }
 
+func (c *Client) Languages() (langs []Language, err error) {
+	return langs, c.request("GET", c.legacyURL("languages/"), nil, &langs)
+}
+
 func (c *Client) AddLanguage(lang string, coord ...string) (err error) {
 	return c.request("POST", c.legacyURL("languages/"), map[string]interface{}{"language_code": lang, "coordinators": coord}, nil)
 }
