@@ -92,4 +92,12 @@ another: eso es.
 		t.Fatalf("%s", err)
 	}
 	t.Logf("%s", file)
+	strings, err := c.GetStrings(slug, "es")
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	if err := c.TranslateString(slug, strings[0].StringHash, "es", "banana"); err != nil {
+		t.Fatalf("%s", err)
+	}
+
 }

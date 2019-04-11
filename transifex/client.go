@@ -146,3 +146,7 @@ func (c *Client) GetStrings(slug, lang string) (r []ResourceString, err error) {
 func (c *Client) SetStringTags(slug, hash string, tags ...string) (err error) {
 	return c.request("PUT", c.legacyURL("resource/%s/source/%s/", slug, hash), map[string][]string{"tags": tags}, nil)
 }
+
+func (c *Client) TranslateString(slug, hash, lang, value string) (err error) {
+	return c.request("PUT", c.legacyURL("resource/%s/translation/%s/string/%s/", slug, lang, hash), map[string]string{"translation": value}, nil)
+}
